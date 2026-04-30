@@ -1,13 +1,25 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import dynamic from 'next/dynamic';
-import { Search, SlidersHorizontal, ChevronUp, TrendingDown } from 'lucide-react';
+import { Search, SlidersHorizontal, ChevronUp, TrendingDown, Star } from 'lucide-react';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { FuelChips } from '@/components/fuel-chips';
 import { BottomNav } from '@/components/bottom-nav';
 import { stations, type Station } from '@/lib/data';
 import { cn } from '@/lib/utils';
+
+const TOP_BRANDS = (() => {
+  const counts: Record<string, number> = {};
+  for (const s of stations) counts[s.brand] = (counts[s.brand] || 0) + 1;
+  return new Set(
+    Object.entries(counts)
+      .filter(([b]) => b !== 'Other')
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name]) => name)
+  );
+})();
 
 const MapContainer = dynamic(
   () => import('react-leaflet').then((mod) => mod.MapContainer),
@@ -47,17 +59,23 @@ export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
   const [sortBy, setSortBy] = useState<'distance' | 'price'>('distance');
   const [sheetExpanded, setSheetExpanded] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [topBrandsOnly, setTopBrandsOnly] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const sortedStations = [...stations].sort((a, b) => {
+  const visibleStations = useMemo(
+    () => topBrandsOnly ? stations.filter(s => TOP_BRANDS.has(s.brand)) : stations,
+    [topBrandsOnly]
+  );
+
+  const sortedStations = useMemo(() => [...visibleStations].sort((a, b) => {
     if (sortBy === 'distance') return a.distance - b.distance;
     const priceA = a.prices.find(p => p.type === selectedFuel)?.price ?? 999;
     const priceB = b.prices.find(p => p.type === selectedFuel)?.price ?? 999;
     return priceA - priceB;
-  });
+  }), [visibleStations, sortBy, selectedFuel]);
 
   const nearbyStations = sortedStations.slice(0, 3);
 
@@ -80,10 +98,24 @@ export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
           <LanguageSwitcher selected="ru" className="hidden sm:flex" />
         </div>
         <FuelChips selected={selectedFuel} onChange={setSelectedFuel} />
+        <button
+          onClick={() => setTopBrandsOnly(v => !v)}
+          className={cn(
+            'mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors',
+            topBrandsOnly
+              ? 'bg-emerald-600 text-white shadow-sm'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+          )}
+        >
+          <Star className={cn('w-3.5 h-3.5', topBrandsOnly && 'fill-white')} />
+          {topBrandsOnly
+            ? `Топ-5 сетей · ${visibleStations.length}`
+            : 'Только топ-5 сетей'}
+        </button>
       </div>
 
       {/* Map */}
-      <div className="flex-1 pt-28">
+      <div className="flex-1 pt-40">
         {mounted && (
           <MapContainer
             center={[40.1872, 44.5152]}
@@ -95,7 +127,7 @@ export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            {stations.map((station) => {
+            {visibleStations.map((station) => {
               const icon = createCustomIcon(station.brandColor);
               const price = station.prices.find(p => p.type === selectedFuel);
               return (
@@ -139,7 +171,7 @@ export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-slate-900">12 заправок рядом</span>
+              <span className="font-semibold text-slate-900">{visibleStations.length} заправок рядом</span>
               <ChevronUp 
                 className={cn(
                   'w-4 h-4 text-slate-400 transition-transform',
