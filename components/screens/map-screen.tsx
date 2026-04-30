@@ -87,7 +87,7 @@ export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
         {mounted && (
           <MapContainer
             center={[40.1872, 44.5152]}
-            zoom={15}
+            zoom={8}
             style={{ height: '100%', width: '100%' }}
             zoomControl={false}
           >
