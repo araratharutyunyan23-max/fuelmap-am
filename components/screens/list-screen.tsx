@@ -5,7 +5,8 @@ import { Search, SlidersHorizontal, Badge } from 'lucide-react';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { FuelChips } from '@/components/fuel-chips';
 import { BottomNav } from '@/components/bottom-nav';
-import { stations, type Station } from '@/lib/data';
+import { type Station } from '@/lib/data';
+import { useStations } from '@/lib/stations-store';
 import { cn } from '@/lib/utils';
 
 interface ListScreenProps {
@@ -14,6 +15,7 @@ interface ListScreenProps {
 }
 
 export function ListScreen({ onNavigate, onStationSelect }: ListScreenProps) {
+  const { stations } = useStations();
   const [selectedFuel, setSelectedFuel] = useState('95');
   const [sortBy, setSortBy] = useState<'distance' | 'price'>('price');
 

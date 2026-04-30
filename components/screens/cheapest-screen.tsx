@@ -6,7 +6,8 @@ import { ArrowLeft, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { BottomNav } from '@/components/bottom-nav';
-import { stations, FUEL_TYPES, type Station } from '@/lib/data';
+import { FUEL_TYPES, type Station } from '@/lib/data';
+import { useStations } from '@/lib/stations-store';
 import { cn } from '@/lib/utils';
 
 const MapContainer = dynamic(
@@ -40,6 +41,7 @@ function createCustomIcon(color: string, rank: number) {
 }
 
 export function CheapestScreen({ onBack, onNavigate, onStationSelect }: CheapestScreenProps) {
+  const { stations } = useStations();
   const [selectedFuel, setSelectedFuel] = useState('95');
   const [priceAlert, setPriceAlert] = useState('510');
   const [alertEnabled, setAlertEnabled] = useState(false);
@@ -63,7 +65,7 @@ export function CheapestScreen({ onBack, onNavigate, onStationSelect }: Cheapest
   const allPrices = stations
     .map((s) => s.prices.find((p) => p.type === selectedFuel)?.price)
     .filter(Boolean) as number[];
-  const avgPrice = Math.round(allPrices.reduce((a, b) => a + b, 0) / allPrices.length);
+  const avgPrice = allPrices.length ? Math.round(allPrices.reduce((a, b) => a + b, 0) / allPrices.length) : 0;
 
   const fuelTabs = FUEL_TYPES.filter((f) => ['92', '95', '98', 'diesel', 'lpg'].includes(f.id));
 

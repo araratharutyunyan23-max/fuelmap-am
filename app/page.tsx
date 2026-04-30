@@ -11,6 +11,7 @@ import { ProfileScreen } from '@/components/screens/profile-screen';
 import { SettingsScreen } from '@/components/screens/settings-screen';
 import { HistoryScreen } from '@/components/screens/history-screen';
 import { type Station } from '@/lib/data';
+import { StationsProvider } from '@/lib/stations-store';
 
 type Screen = 'onboarding' | 'map' | 'list' | 'detail' | 'cheapest' | 'submit' | 'profile' | 'settings' | 'history';
 
@@ -39,7 +40,7 @@ export default function FuelMapApp() {
   };
 
   return (
-    <>
+    <StationsProvider>
       {currentScreen === 'onboarding' && (
         <OnboardingScreen onStart={handleStart} onSkip={handleStart} />
       )}
@@ -95,6 +96,6 @@ export default function FuelMapApp() {
           onNavigate={handleNavigate}
         />
       )}
-    </>
+    </StationsProvider>
   );
 }

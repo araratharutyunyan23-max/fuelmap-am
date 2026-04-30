@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { ArrowLeft, Camera, Pencil, Sparkles, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BottomNav } from '@/components/bottom-nav';
-import { stations, FUEL_TYPES } from '@/lib/data';
+import { FUEL_TYPES } from '@/lib/data';
+import { useStations } from '@/lib/stations-store';
 import { cn } from '@/lib/utils';
 
 interface SubmitPriceScreenProps {
@@ -13,9 +14,10 @@ interface SubmitPriceScreenProps {
 }
 
 export function SubmitPriceScreen({ onBack, onNavigate }: SubmitPriceScreenProps) {
+  const { stations } = useStations();
   const [selectedFuel, setSelectedFuel] = useState('95');
   const [price, setPrice] = useState('');
-  const [selectedStation] = useState(stations[0]);
+  const selectedStation = stations[0];
 
   const fuelChips = FUEL_TYPES.filter((f) => ['92', '95', '98', 'diesel', 'lpg', 'cng'].includes(f.id));
 
@@ -56,19 +58,21 @@ export function SubmitPriceScreen({ onBack, onNavigate }: SubmitPriceScreenProps
           <label className="text-sm font-medium text-slate-500 mb-2 block">
             Автоопределённая АЗС
           </label>
-          <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl">
-            <div
-              className="w-1 h-10 rounded-full"
-              style={{ backgroundColor: selectedStation.brandColor }}
-            />
-            <div className="flex-1">
-              <p className="font-medium text-slate-900">{selectedStation.name}</p>
-              <p className="text-sm text-slate-500">{selectedStation.address}</p>
+          {selectedStation && (
+            <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl">
+              <div
+                className="w-1 h-10 rounded-full"
+                style={{ backgroundColor: selectedStation.brandColor }}
+              />
+              <div className="flex-1">
+                <p className="font-medium text-slate-900">{selectedStation.name}</p>
+                <p className="text-sm text-slate-500">{selectedStation.address}</p>
+              </div>
+              <button className="p-2 hover:bg-slate-200 rounded-lg transition-colors">
+                <Pencil className="w-4 h-4 text-slate-400" />
+              </button>
             </div>
-            <button className="p-2 hover:bg-slate-200 rounded-lg transition-colors">
-              <Pencil className="w-4 h-4 text-slate-400" />
-            </button>
-          </div>
+          )}
         </div>
 
         {/* Fuel Type Selection */}

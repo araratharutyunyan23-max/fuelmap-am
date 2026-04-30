@@ -6,10 +6,11 @@ import { Search, SlidersHorizontal, ChevronUp, TrendingDown, Check } from 'lucid
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { FuelChips } from '@/components/fuel-chips';
 import { BottomNav } from '@/components/bottom-nav';
-import { stations, type Station } from '@/lib/data';
+import { type Station } from '@/lib/data';
+import { useStations } from '@/lib/stations-store';
 import { cn } from '@/lib/utils';
 
-const TOP_BRANDS: { name: string; count: number; color: string }[] = (() => {
+function computeTopBrands(stations: Station[]) {
   const counts: Record<string, { count: number; color: string }> = {};
   for (const s of stations) {
     if (!counts[s.brand]) counts[s.brand] = { count: 0, color: s.brandColor };
@@ -20,7 +21,7 @@ const TOP_BRANDS: { name: string; count: number; color: string }[] = (() => {
     .sort((a, b) => b[1].count - a[1].count)
     .slice(0, 5)
     .map(([name, { count, color }]) => ({ name, count, color }));
-})();
+}
 
 const MapContainer = dynamic(
   () => import('react-leaflet').then((mod) => mod.MapContainer),
@@ -56,6 +57,7 @@ function createCustomIcon(color: string) {
 }
 
 export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
+  const { stations, loading } = useStations();
   const [selectedFuel, setSelectedFuel] = useState('95');
   const [sortBy, setSortBy] = useState<'distance' | 'price'>('distance');
   const [sheetExpanded, setSheetExpanded] = useState(false);
@@ -63,6 +65,7 @@ export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
   const [showBrandFilter, setShowBrandFilter] = useState(false);
   const [selectedBrands, setSelectedBrands] = useState<Set<string>>(new Set());
   const filterRef = useRef<HTMLDivElement>(null);
+  const topBrands = useMemo(() => computeTopBrands(stations), [stations]);
 
   useEffect(() => {
     setMounted(true);
@@ -144,7 +147,7 @@ export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
                     </button>
                   )}
                 </div>
-                {TOP_BRANDS.map(({ name, count, color }) => {
+                {topBrands.map(({ name, count, color }) => {
                   const checked = selectedBrands.has(name);
                   return (
                     <button

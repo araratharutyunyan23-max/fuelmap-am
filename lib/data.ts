@@ -53,7 +53,7 @@ export const FUEL_TYPES = [
   { id: 'cng', label: 'CNG' },
 ];
 
-export { stations } from './stations.generated';
+// Stations live in Supabase. Use `useStations()` from './stations-store' instead.
 
 export const reviews = [
   {
