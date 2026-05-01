@@ -1,7 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { ArrowLeft, Camera, Sparkles, Upload, Loader2, CheckCircle2 } from 'lucide-react';
+import { useMemo, useRef, useState } from 'react';
+import { ArrowLeft, Camera, Sparkles, Upload, Loader2, CheckCircle2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BottomNav } from '@/components/bottom-nav';
 import { FUEL_TYPES } from '@/lib/data';
@@ -9,6 +9,41 @@ import { useStations } from '@/lib/stations-store';
 import { useAuth } from '@/lib/auth-store';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
+
+const MAX_DIM = 1600;
+const JPEG_QUALITY = 0.82;
+
+// Resize a File to fit within MAX_DIM × MAX_DIM, re-encode as JPEG.
+// Saves bandwidth and dodges Supabase's 5MB bucket cap. Runs entirely in-browser.
+async function resizeImage(file: File): Promise<Blob> {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = new Image();
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = () => reject(new Error('Failed to read image'));
+      img.src = url;
+    });
+    const scale = Math.min(1, MAX_DIM / Math.max(img.width, img.height));
+    const w = Math.round(img.width * scale);
+    const h = Math.round(img.height * scale);
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas not supported');
+    ctx.drawImage(img, 0, 0, w, h);
+    return await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob(
+        (blob) => (blob ? resolve(blob) : reject(new Error('Encode failed'))),
+        'image/jpeg',
+        JPEG_QUALITY
+      );
+    });
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
 
 interface SubmitPriceScreenProps {
   onBack: () => void;
@@ -28,6 +63,74 @@ export function SubmitPriceScreen({ onBack, onNavigate, initialStationId }: Subm
   const [price, setPrice] = useState('');
   const [submitState, setSubmitState] = useState<SubmitState>('idle');
   const [error, setError] = useState<string | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const [ocrCandidates, setOcrCandidates] = useState<number[]>([]);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // allow re-picking the same file
+    if (!file) return;
+    if (!user) {
+      onNavigate('login');
+      return;
+    }
+    setError(null);
+    setUploadingPhoto(true);
+    setOcrCandidates([]);
+
+    try {
+      const blob = await resizeImage(file);
+      const previewUrl = URL.createObjectURL(blob);
+      setPhotoPreview(previewUrl);
+
+      const path = `${user.id}/${crypto.randomUUID()}.jpg`;
+      const { error: upErr } = await supabase.storage
+        .from('price-photos')
+        .upload(path, blob, { contentType: 'image/jpeg', upsert: false });
+      if (upErr) throw upErr;
+
+      const { data: pub } = supabase.storage.from('price-photos').getPublicUrl(path);
+      setPhotoUrl(pub.publicUrl);
+      setUploadingPhoto(false);
+
+      // Fire OCR in the background — non-blocking, failures are silent.
+      setOcrLoading(true);
+      try {
+        const r = await fetch('/api/ocr-price', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ photoUrl: pub.publicUrl }),
+        });
+        const data = await r.json();
+        const cands: number[] = Array.isArray(data?.candidates) ? data.candidates : [];
+        setOcrCandidates(cands);
+        // Auto-fill only when there's exactly one candidate — avoids guessing
+        // when the photo shows the full board with several fuel types.
+        if (cands.length === 1) setPrice(String(cands[0]));
+      } catch {
+        // OCR is best-effort; ignore network/parse errors.
+      } finally {
+        setOcrLoading(false);
+      }
+    } catch (err: any) {
+      setError(err?.message ?? 'Не удалось загрузить фото');
+      setPhotoPreview(null);
+      setPhotoUrl(null);
+      setUploadingPhoto(false);
+    }
+  };
+
+  const removePhoto = () => {
+    if (photoPreview) URL.revokeObjectURL(photoPreview);
+    setPhotoPreview(null);
+    setPhotoUrl(null);
+    setOcrCandidates([]);
+  };
 
   const fuelChips = FUEL_TYPES.filter((f) => ['92', '95', '98', 'diesel', 'lpg', 'cng'].includes(f.id));
 
@@ -61,6 +164,7 @@ export function SubmitPriceScreen({ onBack, onNavigate, initialStationId }: Subm
       fuel_type: fuel.id,
       label: fuel.label,
       price: parseInt(price, 10),
+      photo_url: photoUrl,
     });
     if (err) {
       setSubmitState('idle');
@@ -69,6 +173,7 @@ export function SubmitPriceScreen({ onBack, onNavigate, initialStationId }: Subm
     }
     setSubmitState('sent');
     setPrice('');
+    removePhoto();
   };
 
   const submitDisabled =
@@ -102,20 +207,65 @@ export function SubmitPriceScreen({ onBack, onNavigate, initialStationId }: Subm
           </div>
         )}
 
-        {/* Photo Upload Zone (placeholder; wired up in a follow-up commit) */}
+        {/* Photo Upload Zone */}
         <div className="mb-6">
-          <div className="border-2 border-dashed border-slate-300 rounded-xl p-8 flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100 hover:border-emerald-400 transition-colors cursor-pointer">
-            <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-4">
-              <Camera className="w-8 h-8 text-emerald-600" />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={handleFileChange}
+            className="hidden"
+          />
+
+          {photoPreview ? (
+            <div className="relative rounded-xl overflow-hidden bg-slate-50 border border-slate-200">
+              <img src={photoPreview} alt="Фото табло" className="w-full max-h-64 object-cover" />
+              {uploadingPhoto && (
+                <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                  <Loader2 className="w-8 h-8 text-white animate-spin" />
+                </div>
+              )}
+              {!uploadingPhoto && (
+                <button
+                  onClick={removePhoto}
+                  className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80"
+                  aria-label="Убрать фото"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingPhoto}
+                className="w-full px-4 py-2.5 text-sm font-medium text-slate-700 bg-white border-t border-slate-200 hover:bg-slate-50 disabled:opacity-50"
+              >
+                Заменить фото
+              </button>
             </div>
-            <p className="text-slate-700 font-medium text-center mb-2">
-              Сфотографируйте табло цен
-            </p>
-            <p className="text-sm text-slate-500 flex items-center gap-1">
-              <Upload className="w-4 h-4" />
-              или выберите из галереи
-            </p>
-          </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingPhoto}
+              className="w-full border-2 border-dashed border-slate-300 rounded-xl p-8 flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100 hover:border-emerald-400 transition-colors disabled:opacity-50"
+            >
+              <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-4">
+                {uploadingPhoto ? (
+                  <Loader2 className="w-8 h-8 text-emerald-600 animate-spin" />
+                ) : (
+                  <Camera className="w-8 h-8 text-emerald-600" />
+                )}
+              </div>
+              <p className="text-slate-700 font-medium text-center mb-2">
+                {uploadingPhoto ? 'Загружаем…' : 'Сфотографируйте табло цен'}
+              </p>
+              <p className="text-sm text-slate-500 flex items-center gap-1">
+                <Upload className="w-4 h-4" />
+                или выберите из галереи
+              </p>
+            </button>
+          )}
         </div>
 
         {/* Station picker */}
@@ -189,6 +339,37 @@ export function SubmitPriceScreen({ onBack, onNavigate, initialStationId }: Subm
         {/* Price Input */}
         <div className="mb-8">
           <label className="text-sm font-medium text-slate-500 mb-3 block">Цена за литр</label>
+
+          {ocrLoading && (
+            <div className="mb-3 flex items-center gap-2 text-sm text-slate-500">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Распознаём цены на фото…
+            </div>
+          )}
+
+          {!ocrLoading && ocrCandidates.length > 1 && (
+            <div className="mb-3">
+              <p className="text-xs text-slate-500 mb-2">Распознано на фото — нажмите нужную:</p>
+              <div className="flex flex-wrap gap-2">
+                {ocrCandidates.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setPrice(String(c))}
+                    className={cn(
+                      'px-3 py-1.5 rounded-full text-sm font-medium border transition-colors',
+                      price === String(c)
+                        ? 'bg-emerald-600 text-white border-emerald-600'
+                        : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                    )}
+                  >
+                    {c} ֏
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="relative">
             <input
               type="text"
