@@ -1,6 +1,7 @@
 'use client';
 
-import { ArrowLeft, Share2, Navigation, Phone, MessageSquare, Star, TrendingDown, TrendingUp, ChevronRight } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowLeft, Share2, Navigation, MessageSquare, Star, TrendingDown, TrendingUp, ChevronRight, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BottomNav } from '@/components/bottom-nav';
 import { type Station, reviews, priceHistory } from '@/lib/data';
@@ -13,7 +14,32 @@ interface StationDetailScreenProps {
   onNavigate: (screen: string) => void;
 }
 
+function buildRouteUrls(lat: number, lng: number) {
+  return [
+    {
+      name: 'Yandex Карты',
+      sub: 'или Yandex Навигатор',
+      url: `https://yandex.com/maps/?rtext=~${lat},${lng}&rtt=auto&z=14`,
+      logo: '🟡',
+    },
+    {
+      name: 'Google Maps',
+      sub: '',
+      url: `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`,
+      logo: '🟢',
+    },
+    {
+      name: 'Apple Карты',
+      sub: 'iPhone / iPad',
+      url: `https://maps.apple.com/?daddr=${lat},${lng}&dirflg=d`,
+      logo: '🔵',
+    },
+  ];
+}
+
 export function StationDetailScreen({ station, onBack, onNavigate }: StationDetailScreenProps) {
+  const [showRouteSheet, setShowRouteSheet] = useState(false);
+  const routeUrls = buildRouteUrls(station.lat, station.lng);
   return (
     <div className="min-h-screen bg-white pb-20">
       {/* Hero */}
@@ -53,15 +79,19 @@ export function StationDetailScreen({ station, onBack, onNavigate }: StationDeta
 
           {/* Quick Actions */}
           <div className="flex gap-3 mt-4">
-            <Button variant="outline" className="flex-1 gap-2 rounded-xl h-11">
+            <Button
+              variant="outline"
+              className="flex-1 gap-2 rounded-xl h-11"
+              onClick={() => setShowRouteSheet(true)}
+            >
               <Navigation className="w-4 h-4" />
               Маршрут
             </Button>
-            <Button variant="outline" className="flex-1 gap-2 rounded-xl h-11">
-              <Phone className="w-4 h-4" />
-              Позвонить
-            </Button>
-            <Button variant="outline" className="flex-1 gap-2 rounded-xl h-11">
+            <Button
+              variant="outline"
+              className="flex-1 gap-2 rounded-xl h-11"
+              onClick={() => onNavigate('submit')}
+            >
               <MessageSquare className="w-4 h-4" />
               Сообщить цену
             </Button>
@@ -71,6 +101,14 @@ export function StationDetailScreen({ station, onBack, onNavigate }: StationDeta
         {/* Prices */}
         <div className="mb-4">
           <h2 className="text-lg font-semibold text-slate-900 mb-3">Цены на топливо</h2>
+          {station.prices.length === 0 ? (
+            <div className="bg-slate-50 rounded-xl p-6 text-center">
+              <p className="text-sm text-slate-500">Цены ещё не указаны</p>
+              <p className="text-xs text-slate-400 mt-1">
+                Заправлялись здесь? Сообщите цену через кнопку выше.
+              </p>
+            </div>
+          ) : (
           <div className="grid grid-cols-2 gap-3">
             {station.prices.map((price) => (
               <div
@@ -103,6 +141,7 @@ export function StationDetailScreen({ station, onBack, onNavigate }: StationDeta
               </div>
             ))}
           </div>
+          )}
         </div>
 
         {/* Price History Chart */}
@@ -193,6 +232,52 @@ export function StationDetailScreen({ station, onBack, onNavigate }: StationDeta
       </div>
 
       <BottomNav active="map" onNavigate={onNavigate} />
+
+      {/* Route picker bottom sheet */}
+      {showRouteSheet && (
+        <div
+          className="fixed inset-0 z-[2000] bg-black/40 flex items-end sm:items-center justify-center"
+          onClick={() => setShowRouteSheet(false)}
+        >
+          <div
+            className="w-full sm:max-w-sm bg-white rounded-t-2xl sm:rounded-2xl shadow-xl p-4 pb-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-slate-900">Открыть в…</h3>
+              <button
+                onClick={() => setShowRouteSheet(false)}
+                className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500"
+                aria-label="Закрыть"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-2">
+              {routeUrls.map((opt) => (
+                <a
+                  key={opt.name}
+                  href={opt.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setShowRouteSheet(false)}
+                  className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors"
+                >
+                  <span className="text-2xl">{opt.logo}</span>
+                  <div className="flex-1 text-left">
+                    <p className="font-medium text-slate-900">{opt.name}</p>
+                    {opt.sub && <p className="text-xs text-slate-500">{opt.sub}</p>}
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                </a>
+              ))}
+            </div>
+            <p className="text-xs text-slate-400 text-center mt-4">
+              Откроется приложение, если установлено, иначе веб-версия.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

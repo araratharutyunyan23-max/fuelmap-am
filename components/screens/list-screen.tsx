@@ -21,14 +21,19 @@ export function ListScreen({ onNavigate, onStationSelect }: ListScreenProps) {
 
   const sortedStations = [...stations].sort((a, b) => {
     if (sortBy === 'distance') return a.distance - b.distance;
-    const priceA = a.prices.find(p => p.type === selectedFuel)?.price ?? 999;
-    const priceB = b.prices.find(p => p.type === selectedFuel)?.price ?? 999;
+    // Stations without the selected fuel sink to the bottom of price-sort.
+    const priceA = a.prices.find(p => p.type === selectedFuel)?.price ?? Number.POSITIVE_INFINITY;
+    const priceB = b.prices.find(p => p.type === selectedFuel)?.price ?? Number.POSITIVE_INFINITY;
     return priceA - priceB;
   });
 
-  // Calculate average price
-  const prices = sortedStations.map(s => s.prices.find(p => p.type === selectedFuel)?.price ?? 0);
-  const avgPrice = Math.round(prices.reduce((a, b) => a + b, 0) / prices.length);
+  // Average is over stations that actually have this fuel — missing prices are not zero.
+  const knownPrices = stations
+    .map(s => s.prices.find(p => p.type === selectedFuel)?.price)
+    .filter((p): p is number => typeof p === 'number');
+  const avgPrice = knownPrices.length
+    ? Math.round(knownPrices.reduce((a, b) => a + b, 0) / knownPrices.length)
+    : null;
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
@@ -84,8 +89,8 @@ export function ListScreen({ onNavigate, onStationSelect }: ListScreenProps) {
       <div className="px-4 py-4 space-y-3">
         {sortedStations.map((station, index) => {
           const price = station.prices.find(p => p.type === selectedFuel);
-          const priceDiff = price ? price.price - avgPrice : 0;
-          const isCheapest = index === 0 && sortBy === 'price';
+          const priceDiff = price && avgPrice !== null ? price.price - avgPrice : 0;
+          const isCheapest = index === 0 && sortBy === 'price' && !!price;
 
           return (
             <button

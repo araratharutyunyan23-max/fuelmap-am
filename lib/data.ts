@@ -21,29 +21,6 @@ export interface Station {
   hours: { day: string; time: string; isToday?: boolean }[];
 }
 
-export const BRAND_COLORS: Record<string, string> = {
-  'Flash': '#dc2626',
-  'Shell': '#fbbf24',
-  'Gazprom': '#1e40af',
-  'Sas Oil': '#f97316',
-  'City Petrol': '#16a34a',
-  'Agat': '#9333ea',
-  'Max Oil': '#0d9488',
-  'Lukoil': '#991b1b',
-  'Tatneft': '#1e3a8a',
-  'Rosneft': '#facc15',
-  'Portal': '#0ea5e9',
-  'CPS': '#06b6d4',
-  'RAN Oil': '#d97706',
-  'Orange': '#c2410c',
-  'Gastop': '#65a30d',
-  'Titan': '#e11d48',
-  'Gulf': '#0c4a6e',
-  'Mika': '#7c3aed',
-  'Art Petrol': '#db2777',
-  'Other': '#64748b',
-};
-
 export const FUEL_TYPES = [
   { id: '92', label: '92' },
   { id: '95', label: '95' },

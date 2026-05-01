@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { Search, SlidersHorizontal, ChevronUp, TrendingDown, Check } from 'lucide-react';
+import { Search, SlidersHorizontal, ChevronUp, TrendingDown, Check, LocateFixed, Loader2, X } from 'lucide-react';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { FuelChips } from '@/components/fuel-chips';
 import { BottomNav } from '@/components/bottom-nav';
 import { type Station } from '@/lib/data';
 import { useStations } from '@/lib/stations-store';
+import { useUserLocation } from '@/lib/user-location';
 import { cn } from '@/lib/utils';
 
 function computeTopBrands(stations: Station[]) {
@@ -39,6 +40,20 @@ const Popup = dynamic(
   () => import('react-leaflet').then((mod) => mod.Popup),
   { ssr: false }
 );
+const RecenterOnUser = dynamic(
+  () =>
+    import('react-leaflet').then(({ useMap }) => {
+      const Inner = ({ location }: { location: { lat: number; lng: number } | null }) => {
+        const map = useMap();
+        useEffect(() => {
+          if (location) map.flyTo([location.lat, location.lng], 14);
+        }, [location, map]);
+        return null;
+      };
+      return Inner;
+    }),
+  { ssr: false }
+);
 
 interface MapScreenProps {
   onNavigate: (screen: string) => void;
@@ -56,16 +71,37 @@ function createCustomIcon(color: string) {
   });
 }
 
+function createUserIcon() {
+  if (typeof window === 'undefined') return undefined;
+  const L = require('leaflet');
+  return L.divIcon({
+    className: 'user-marker',
+    html: `<div style="position:relative;width:20px;height:20px;">
+      <div style="position:absolute;inset:0;background-color:#3b82f6;border-radius:50%;border:3px solid white;box-shadow:0 0 0 1px #3b82f6, 0 4px 12px rgba(59,130,246,0.5);"></div>
+      <div style="position:absolute;inset:-12px;border-radius:50%;background-color:#3b82f6;opacity:0.18;animation:userpulse 2s ease-out infinite;"></div>
+    </div>
+    <style>@keyframes userpulse{0%{transform:scale(0.6);opacity:0.5}100%{transform:scale(1.4);opacity:0}}</style>`,
+    iconSize: [20, 20],
+    iconAnchor: [10, 10],
+  });
+}
+
 export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
   const { stations, loading } = useStations();
+  const { location, requesting, error: locationError, request: requestLocation } = useUserLocation();
   const [selectedFuel, setSelectedFuel] = useState('95');
   const [sortBy, setSortBy] = useState<'distance' | 'price'>('distance');
   const [sheetExpanded, setSheetExpanded] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [showBrandFilter, setShowBrandFilter] = useState(false);
+  const [showLocationError, setShowLocationError] = useState(false);
   const [selectedBrands, setSelectedBrands] = useState<Set<string>>(new Set());
   const filterRef = useRef<HTMLDivElement>(null);
   const topBrands = useMemo(() => computeTopBrands(stations), [stations]);
+
+  useEffect(() => {
+    if (locationError) setShowLocationError(true);
+  }, [locationError]);
 
   useEffect(() => {
     setMounted(true);
@@ -92,13 +128,14 @@ export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
 
   const visibleStations = useMemo(
     () => selectedBrands.size === 0 ? stations : stations.filter(s => selectedBrands.has(s.brand)),
-    [selectedBrands]
+    [selectedBrands, stations]
   );
 
   const sortedStations = useMemo(() => [...visibleStations].sort((a, b) => {
     if (sortBy === 'distance') return a.distance - b.distance;
-    const priceA = a.prices.find(p => p.type === selectedFuel)?.price ?? 999;
-    const priceB = b.prices.find(p => p.type === selectedFuel)?.price ?? 999;
+    // Stations without the selected fuel sink to the bottom of price-sort.
+    const priceA = a.prices.find(p => p.type === selectedFuel)?.price ?? Number.POSITIVE_INFINITY;
+    const priceB = b.prices.find(p => p.type === selectedFuel)?.price ?? Number.POSITIVE_INFINITY;
     return priceA - priceB;
   }), [visibleStations, sortBy, selectedFuel]);
 
@@ -176,7 +213,37 @@ export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
       </div>
 
       {/* Map */}
-      <div className="flex-1 pt-28">
+      <div className="flex-1 pt-28 relative">
+        {/* My-location button — sits above the bottom sheet, lower-right */}
+        <button
+          onClick={requestLocation}
+          disabled={requesting}
+          aria-label="Моё местоположение"
+          className={cn(
+            'absolute right-4 z-[1100] w-11 h-11 rounded-full bg-white shadow-lg flex items-center justify-center transition-colors',
+            location ? 'text-blue-600' : 'text-slate-600',
+            requesting && 'opacity-70 cursor-wait',
+            'hover:bg-slate-50'
+          )}
+          style={{ bottom: 'calc(240px + 12px)' }}
+        >
+          {requesting ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            <LocateFixed className="w-5 h-5" />
+          )}
+        </button>
+
+        {showLocationError && locationError && (
+          <div className="absolute right-4 left-4 z-[1100] flex items-start gap-2 bg-white shadow-lg border border-red-200 rounded-xl px-3 py-2 text-sm text-red-700"
+               style={{ bottom: 'calc(240px + 64px)' }}>
+            <span className="flex-1">{locationError}</span>
+            <button onClick={() => setShowLocationError(false)} className="text-red-400 hover:text-red-600">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
         {mounted && (
           <MapContainer
             center={[40.1872, 44.5152]}
@@ -188,6 +255,13 @@ export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
+            <RecenterOnUser location={location} />
+            {location && (
+              <Marker
+                position={[location.lat, location.lng]}
+                icon={createUserIcon()}
+              />
+            )}
             {visibleStations.map((station) => {
               const icon = createCustomIcon(station.brandColor);
               const price = station.prices.find(p => p.type === selectedFuel);
@@ -242,7 +316,12 @@ export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
             </div>
             <div className="flex bg-slate-100 rounded-full p-0.5">
               <button
-                onClick={() => setSortBy('distance')}
+                onClick={() => {
+                  setSortBy('distance');
+                  // Acquire / refresh user position so the sort actually means "from me".
+                  // request() is a no-op if it's already in flight.
+                  if (!location && !requesting) requestLocation();
+                }}
                 className={cn(
                   'px-3 py-1 text-xs font-medium rounded-full transition-colors',
                   sortBy === 'distance'

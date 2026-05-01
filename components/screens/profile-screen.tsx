@@ -1,8 +1,9 @@
 'use client';
 
-import { User, ChevronRight, Lock, Unlock } from 'lucide-react';
+import { User, ChevronRight, Lock, LogIn, LogOut } from 'lucide-react';
 import { BottomNav } from '@/components/bottom-nav';
 import { userProfile } from '@/lib/data';
+import { useAuth } from '@/lib/auth-store';
 import { cn } from '@/lib/utils';
 
 interface ProfileScreenProps {
@@ -10,6 +11,12 @@ interface ProfileScreenProps {
 }
 
 export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
+  const { user, signOut } = useAuth();
+  const displayName =
+    (user?.user_metadata?.name as string | undefined) ||
+    user?.email?.split('@')[0] ||
+    'Гость';
+
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
       {/* Profile Header */}
@@ -18,14 +25,34 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
           <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center">
             <User className="w-8 h-8 text-emerald-600" />
           </div>
-          <div>
-            <h1 className="text-xl font-bold text-slate-900">{userProfile.name}</h1>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl font-bold text-slate-900 truncate">{displayName}</h1>
             <div className="flex items-center gap-2 mt-1">
               <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-sm font-medium rounded-full">
                 {userProfile.level} · {userProfile.karma} кармы
               </span>
             </div>
+            {user?.email && (
+              <p className="text-xs text-slate-400 mt-1 truncate">{user.email}</p>
+            )}
           </div>
+          {user ? (
+            <button
+              onClick={signOut}
+              className="p-2 hover:bg-slate-100 rounded-lg text-slate-500"
+              title="Выйти"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
+          ) : (
+            <button
+              onClick={() => onNavigate('login')}
+              className="px-3 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 flex items-center gap-1"
+            >
+              <LogIn className="w-4 h-4" />
+              Войти
+            </button>
+          )}
         </div>
       </div>
 

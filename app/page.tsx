@@ -10,10 +10,14 @@ import { SubmitPriceScreen } from '@/components/screens/submit-price-screen';
 import { ProfileScreen } from '@/components/screens/profile-screen';
 import { SettingsScreen } from '@/components/screens/settings-screen';
 import { HistoryScreen } from '@/components/screens/history-screen';
+import { LoginScreen } from '@/components/screens/login-screen';
+import { RegisterScreen } from '@/components/screens/register-screen';
 import { type Station } from '@/lib/data';
 import { StationsProvider } from '@/lib/stations-store';
+import { AuthProvider } from '@/lib/auth-store';
+import { UserLocationProvider } from '@/lib/user-location';
 
-type Screen = 'onboarding' | 'map' | 'list' | 'detail' | 'cheapest' | 'submit' | 'profile' | 'settings' | 'history';
+type Screen = 'onboarding' | 'map' | 'list' | 'detail' | 'cheapest' | 'submit' | 'profile' | 'settings' | 'history' | 'login' | 'register';
 
 export default function FuelMapApp() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('onboarding');
@@ -40,9 +44,31 @@ export default function FuelMapApp() {
   };
 
   return (
+    <AuthProvider>
+    <UserLocationProvider>
     <StationsProvider>
       {currentScreen === 'onboarding' && (
-        <OnboardingScreen onStart={handleStart} onSkip={handleStart} />
+        <OnboardingScreen
+          onLogin={() => handleNavigate('login')}
+          onRegister={() => handleNavigate('register')}
+          onGuest={handleStart}
+        />
+      )}
+
+      {currentScreen === 'login' && (
+        <LoginScreen
+          onBack={handleBack}
+          onSuccess={() => setCurrentScreen('map')}
+          onGoToRegister={() => setCurrentScreen('register')}
+        />
+      )}
+
+      {currentScreen === 'register' && (
+        <RegisterScreen
+          onBack={handleBack}
+          onSuccess={() => setCurrentScreen('map')}
+          onGoToLogin={() => setCurrentScreen('login')}
+        />
       )}
 
       {currentScreen === 'map' && (
@@ -79,6 +105,7 @@ export default function FuelMapApp() {
         <SubmitPriceScreen
           onBack={handleBack}
           onNavigate={handleNavigate}
+          initialStationId={previousScreen === 'detail' ? selectedStation?.id ?? null : null}
         />
       )}
 
@@ -97,5 +124,7 @@ export default function FuelMapApp() {
         />
       )}
     </StationsProvider>
+    </UserLocationProvider>
+    </AuthProvider>
   );
 }

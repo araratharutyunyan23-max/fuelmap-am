@@ -51,13 +51,13 @@ export function CheapestScreen({ onBack, onNavigate, onStationSelect }: Cheapest
     setMounted(true);
   }, []);
 
-  // Get top 5 cheapest stations for selected fuel
-  const cheapestStations = [...stations]
-    .map((s) => ({
-      ...s,
-      price: s.prices.find((p) => p.type === selectedFuel)?.price ?? 999,
-    }))
-    .filter((s) => s.price < 999)
+  // Top 5 cheapest stations for the selected fuel; stations without it are excluded.
+  const cheapestStations = stations
+    .map((s) => {
+      const found = s.prices.find((p) => p.type === selectedFuel);
+      return found ? { ...s, price: found.price } : null;
+    })
+    .filter((s): s is Station & { price: number } => s !== null)
     .sort((a, b) => a.price - b.price)
     .slice(0, 5);
 

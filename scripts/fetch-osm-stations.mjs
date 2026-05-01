@@ -12,18 +12,14 @@ area["ISO3166-1"="AM"][admin_level=2]->.am;
 out center tags;
 `;
 
+// Source of truth for brand colors + tiers lives in lib/brands.ts.
+// This array adds OSM-specific match regexes on top.
+// To add a brand: register it in lib/brands.ts AND add a match line here.
 const BRANDS = [
   { match: /flash|ֆլեշ|флэш|флеш/i, name: 'Flash', color: '#dc2626' },
   { match: /shell|շելլ|шелл/i, name: 'Shell', color: '#fbbf24' },
   { match: /gazprom|газпром|գազպրոմ/i, name: 'Gazprom', color: '#1e40af' },
-  { match: /\bsas\b|\bсас\b/i, name: 'Sas Oil', color: '#f97316' },
-  { match: /city\s*petrol/i, name: 'City Petrol', color: '#16a34a' },
-  { match: /\bagat\b|ագատ|\bагат\b/i, name: 'Agat', color: '#9333ea' },
   { match: /max\s*oil|макс\s*ойл/i, name: 'Max Oil', color: '#0d9488' },
-  { match: /lukoil|лукойл|լուկօյլ/i, name: 'Lukoil', color: '#991b1b' },
-  { match: /tatneft|татнефт/i, name: 'Tatneft', color: '#1e3a8a' },
-  { match: /rosneft|роснефть/i, name: 'Rosneft', color: '#facc15' },
-  { match: /portal/i, name: 'Portal', color: '#0ea5e9' },
   { match: /\bcps\b/i, name: 'CPS', color: '#06b6d4' },
   { match: /ran\s*oil|ран\s*ойл/i, name: 'RAN Oil', color: '#d97706' },
   { match: /\borange\b|օրանժ|оранж/i, name: 'Orange', color: '#c2410c' },
@@ -34,6 +30,8 @@ const BRANDS = [
   { match: /art\s*petrol|արտ\s*պետրոլ|арт\s*петрол/i, name: 'Art Petrol', color: '#db2777' },
 ];
 
+// Stations that don't match any brand are dropped — see filter in main().
+// Set KEEP_OTHER=1 to include them (e.g. for one-off audits).
 const FALLBACK = { name: 'Other', color: '#64748b' };
 
 function normalizeBrand(tags) {
@@ -54,24 +52,46 @@ function pickName(tags, brandName) {
   return tags['name:ru'] || tags.name || tags['name:en'] || tags['name:hy'] || brandName;
 }
 
+// Build the friendliest address string we can from whatever OSM tags exist.
+// Priority order, most-specific first:
+//   1. street + housenumber, optionally with city/village/region
+//   2. street alone, optionally with city/village/region
+//   3. just a place name (village/hamlet/suburb/city), optionally with region
+//   4. just region (Lori, Tavush, Yerevan…)
+//   5. fallback: 'Адрес не указан'
+//
+// Region tags (`addr:state`, `is_in:state`) tend to be in English/Armenian;
+// the rest are usually native-language. We don't translate — the rendered text
+// matches what OSM contributors put in.
 function pickAddress(tags) {
-  const street = tags['addr:street'] || tags['addr:place'] || '';
-  const houseNumber = tags['addr:housenumber'] || '';
-  const city = tags['addr:city'] || '';
-  if (street) return [street, houseNumber, city].filter(Boolean).join(' ').trim();
-  return city || 'Адрес не указан';
+  const street = tags['addr:street'];
+  const houseNumber = tags['addr:housenumber'];
+  const place =
+    tags['addr:village'] ||
+    tags['addr:hamlet'] ||
+    tags['addr:suburb'] ||
+    tags['addr:district'] ||
+    tags['addr:city'] ||
+    tags['addr:place'];
+  const region =
+    tags['addr:state'] ||
+    tags['addr:province'] ||
+    tags['addr:region'] ||
+    tags['is_in:state'] ||
+    tags['is_in:province'];
+
+  if (street) {
+    const left = [street, houseNumber].filter(Boolean).join(' ');
+    return [left, place, region].filter(Boolean).join(', ').trim();
+  }
+  if (place) {
+    return [place, region].filter(Boolean).join(', ').trim();
+  }
+  if (region) {
+    return region;
+  }
+  return 'Адрес не указан';
 }
-
-const PRICE_RANGES = {
-  '92': [470, 490],
-  '95': [510, 540],
-  '98': [570, 600],
-  diesel: [530, 560],
-  lpg: [280, 310],
-  cng: [220, 250],
-};
-
-const FUEL_LABELS = { '92': 'АИ-92', '95': 'АИ-95', '98': 'АИ-98', diesel: 'Дизель', lpg: 'LPG', cng: 'CNG' };
 
 function seededRandom(seed) {
   let h = 2166136261;
@@ -84,21 +104,6 @@ function seededRandom(seed) {
     h = Math.imul(h ^ (h >>> 13), 3266489909);
     return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
   };
-}
-
-function generatePrices(stationId, hasLPG, hasCNG) {
-  const rng = seededRandom(stationId);
-  const fuels = ['92', '95', '98', 'diesel'];
-  if (hasLPG) fuels.push('lpg');
-  if (hasCNG) fuels.push('cng');
-  return fuels.map((type) => {
-    const [min, max] = PRICE_RANGES[type];
-    const price = Math.round(min + rng() * (max - min));
-    const trend = Math.round(rng() * 30 - 15);
-    const ageMin = Math.floor(rng() * 240);
-    const updatedAgo = ageMin < 60 ? `${ageMin} мин назад` : `${Math.floor(ageMin / 60)} ч назад`;
-    return { type, label: FUEL_LABELS[type], price, trend, updatedAgo };
-  });
 }
 
 const DEFAULT_HOURS = [
@@ -140,6 +145,7 @@ async function main() {
   const data = await res.json();
   console.log(`Got ${data.elements.length} OSM elements`);
 
+  const keepOther = process.env.KEEP_OTHER === '1';
   const stations = data.elements.map((el) => {
     const id = String(el.id);
     const lat = el.lat ?? el.center?.lat;
@@ -148,9 +154,6 @@ async function main() {
     const tags = el.tags || {};
     const brand = normalizeBrand(tags);
     const name = pickName(tags, brand.name);
-    const rng = seededRandom(id + ':fuels');
-    const hasLPG = (tags['fuel:lpg'] === 'yes') || rng() < 0.55;
-    const hasCNG = (tags['fuel:cng'] === 'yes') || rng() < 0.25;
     const ratingRng = seededRandom(id + ':r');
     return {
       id,
@@ -161,12 +164,14 @@ async function main() {
       lat,
       lng,
       distance: haversineKm({ lat, lng }, YEREVAN_CENTER),
+      // rating + reviews are still placeholder seed values until we wire reviews.
       rating: Math.round((3.8 + ratingRng() * 1.2) * 10) / 10,
       reviews: Math.floor(20 + ratingRng() * 400),
-      prices: generatePrices(id, hasLPG, hasCNG),
+      // Prices come from scripts/scrape-prices.mjs, not OSM.
+      prices: [],
       hours: DEFAULT_HOURS,
     };
-  }).filter(Boolean);
+  }).filter((s) => s && (keepOther || s.brand !== 'Other'));
 
   const counts = {};
   for (const s of stations) counts[s.brand] = (counts[s.brand] || 0) + 1;
