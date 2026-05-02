@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowLeft, Share2, Navigation, MessageSquare, TrendingDown, TrendingUp, ChevronRight, X } from 'lucide-react';
+import { ArrowLeft, Share2, Navigation, MessageSquare, TrendingDown, TrendingUp, ChevronRight, X, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BottomNav } from '@/components/bottom-nav';
+import { ReviewsBlock } from '@/components/reviews-block';
 import { type Station } from '@/lib/data';
 import { useT } from '@/lib/locale-store';
 import type { TranslationKey } from '@/lib/i18n';
@@ -68,6 +69,13 @@ export function StationDetailScreen({ station, onBack, onNavigate }: StationDeta
         <div className="bg-white rounded-2xl shadow-md p-4 mb-4">
           <h1 className="text-xl font-bold text-slate-900 mb-1">{station.name}</h1>
           <p className="text-slate-500">{station.address} · {station.distance} {t('common.km')}</p>
+          {station.rating > 0 && (
+            <div className="flex items-center gap-1 mt-2">
+              <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+              <span className="text-sm font-medium text-slate-900">{station.rating.toFixed(1)}</span>
+              <span className="text-sm text-slate-400">· {station.reviews}</span>
+            </div>
+          )}
 
           {/* Quick Actions */}
           <div className="flex gap-3 mt-4">
@@ -134,6 +142,8 @@ export function StationDetailScreen({ station, onBack, onNavigate }: StationDeta
           )}
         </div>
 
+        {/* Reviews */}
+        <ReviewsBlock stationId={station.id} onLoginRequired={() => onNavigate('login')} />
       </div>
 
       <BottomNav active="map" onNavigate={onNavigate} />
