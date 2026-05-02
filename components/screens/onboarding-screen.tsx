@@ -3,6 +3,7 @@
 import { MapPin, TrendingDown, Bell, Droplets } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LanguageSwitcher } from '@/components/language-switcher';
+import { useT } from '@/lib/locale-store';
 
 interface OnboardingScreenProps {
   onLogin: () => void;
@@ -11,10 +12,11 @@ interface OnboardingScreenProps {
 }
 
 export function OnboardingScreen({ onLogin, onRegister, onGuest }: OnboardingScreenProps) {
+  const t = useT();
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <div className="flex justify-end p-4">
-        <LanguageSwitcher selected="ru" />
+        <LanguageSwitcher />
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center px-6 pb-4">
@@ -29,7 +31,7 @@ export function OnboardingScreen({ onLogin, onRegister, onGuest }: OnboardingScr
         </div>
 
         <p className="text-center text-lg text-slate-600 mb-10 text-balance">
-          Все заправки Армении в одном приложении
+          {t('onboarding.tagline')}
         </p>
 
         <div className="w-full space-y-4 mb-8">
@@ -37,21 +39,21 @@ export function OnboardingScreen({ onLogin, onRegister, onGuest }: OnboardingScr
             <div className="flex items-center justify-center w-12 h-12 bg-emerald-100 rounded-full">
               <MapPin className="w-6 h-6 text-emerald-600" />
             </div>
-            <p className="text-slate-700 font-medium">Карта 250+ АЗС по всей стране</p>
+            <p className="text-slate-700 font-medium">{t('onboarding.feature.map')}</p>
           </div>
 
           <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl">
             <div className="flex items-center justify-center w-12 h-12 bg-emerald-100 rounded-full">
               <TrendingDown className="w-6 h-6 text-emerald-600" />
             </div>
-            <p className="text-slate-700 font-medium">Сравнивай цены и экономь до 30 ֏/литр</p>
+            <p className="text-slate-700 font-medium">{t('onboarding.feature.cheaper')}</p>
           </div>
 
           <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl">
             <div className="flex items-center justify-center w-12 h-12 bg-emerald-100 rounded-full">
               <Bell className="w-6 h-6 text-emerald-600" />
             </div>
-            <p className="text-slate-700 font-medium">Уведомления о падении цен</p>
+            <p className="text-slate-700 font-medium">{t('onboarding.feature.alerts')}</p>
           </div>
         </div>
       </div>
@@ -61,20 +63,20 @@ export function OnboardingScreen({ onLogin, onRegister, onGuest }: OnboardingScr
           onClick={onRegister}
           className="w-full h-14 text-base font-semibold bg-emerald-600 hover:bg-emerald-700 rounded-xl"
         >
-          Регистрация
+          {t('onboarding.cta.register')}
         </Button>
         <Button
           onClick={onLogin}
           variant="outline"
           className="w-full h-14 text-base font-semibold rounded-xl border-slate-300"
         >
-          Войти
+          {t('onboarding.cta.login')}
         </Button>
         <button
           onClick={onGuest}
           className="w-full py-3 text-slate-500 text-sm font-medium hover:text-slate-700"
         >
-          Войти как гость
+          {t('onboarding.cta.guest')}
         </button>
       </div>
     </div>

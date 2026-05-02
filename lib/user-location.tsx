@@ -29,7 +29,7 @@ export function UserLocationProvider({ children }: { children: ReactNode }) {
 
   const request = useCallback(() => {
     if (typeof navigator === 'undefined' || !navigator.geolocation) {
-      setError('Геолокация не поддерживается этим браузером');
+      setError('map.location.notSupported');
       return;
     }
     setRequesting(true);
@@ -44,12 +44,13 @@ export function UserLocationProvider({ children }: { children: ReactNode }) {
         setRequesting(false);
       },
       (err) => {
-        const map: Record<number, string> = {
-          1: 'Доступ к геолокации запрещён',
-          2: 'Не удалось определить позицию',
-          3: 'Время ожидания истекло',
+        // Emit a translation key so consumers can render in current locale.
+        const codeToKey: Record<number, string> = {
+          1: 'map.location.denied',
+          2: 'map.location.failed',
+          3: 'map.location.timeout',
         };
-        setError(map[err.code] ?? err.message);
+        setError(codeToKey[err.code] ?? 'map.location.failed');
         setRequesting(false);
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }

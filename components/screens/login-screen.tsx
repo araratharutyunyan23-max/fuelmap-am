@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ArrowLeft, Mail, Lock, MapPin, Droplets, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth-store';
+import { useT } from '@/lib/locale-store';
 
 interface LoginScreenProps {
   onBack: () => void;
@@ -12,6 +13,7 @@ interface LoginScreenProps {
 }
 
 export function LoginScreen({ onBack, onSuccess, onGoToRegister }: LoginScreenProps) {
+  const t = useT();
   const { signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -29,7 +31,7 @@ export function LoginScreen({ onBack, onSuccess, onGoToRegister }: LoginScreenPr
     const { error: err } = await signIn(email.trim(), password);
     setSubmitting(false);
     if (err) {
-      setError(err === 'Invalid login credentials' ? 'Неверный email или пароль' : err);
+      setError(err === 'Invalid login credentials' ? t('login.invalidCredentials') : err);
       return;
     }
     onSuccess();
@@ -58,12 +60,10 @@ export function LoginScreen({ onBack, onSuccess, onGoToRegister }: LoginScreenPr
         </div>
 
         <div className="w-full max-w-sm">
-          <h1 className="text-xl font-bold text-slate-900 mb-2 text-center">Вход</h1>
-          <p className="text-slate-600 text-center mb-8">
-            Введите email и пароль для входа.
-          </p>
+          <h1 className="text-xl font-bold text-slate-900 mb-2 text-center">{t('login.title')}</h1>
+          <p className="text-slate-600 text-center mb-8">{t('login.subtitle')}</p>
 
-          <label className="text-sm font-medium text-slate-500 mb-2 block">Email</label>
+          <label className="text-sm font-medium text-slate-500 mb-2 block">{t('login.email')}</label>
           <div className="relative mb-4">
             <Mail className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
             <input
@@ -77,7 +77,7 @@ export function LoginScreen({ onBack, onSuccess, onGoToRegister }: LoginScreenPr
             />
           </div>
 
-          <label className="text-sm font-medium text-slate-500 mb-2 block">Пароль</label>
+          <label className="text-sm font-medium text-slate-500 mb-2 block">{t('login.password')}</label>
           <div className="relative mb-4">
             <Lock className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
             <input
@@ -85,14 +85,13 @@ export function LoginScreen({ onBack, onSuccess, onGoToRegister }: LoginScreenPr
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Минимум 6 символов"
+              placeholder={t('login.passwordPlaceholder')}
               className="w-full h-14 pl-12 pr-12 bg-slate-50 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
               className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600"
-              aria-label={showPassword ? 'Скрыть пароль' : 'Показать пароль'}
             >
               {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
@@ -105,16 +104,16 @@ export function LoginScreen({ onBack, onSuccess, onGoToRegister }: LoginScreenPr
             disabled={!canSubmit}
             className="w-full h-14 text-base font-semibold bg-emerald-600 hover:bg-emerald-700 rounded-xl"
           >
-            {submitting ? 'Входим…' : 'Войти'}
+            {submitting ? t('login.submitting') : t('login.submit')}
           </Button>
 
           <p className="text-sm text-slate-500 text-center mt-6">
-            Нет аккаунта?{' '}
+            {t('login.noAccount')}{' '}
             <button
               onClick={onGoToRegister}
               className="text-emerald-600 font-semibold hover:underline"
             >
-              Зарегистрироваться
+              {t('login.goToRegister')}
             </button>
           </p>
         </div>

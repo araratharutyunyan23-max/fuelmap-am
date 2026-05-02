@@ -7,6 +7,8 @@ import { BottomNav } from '@/components/bottom-nav';
 import { FUEL_TYPES } from '@/lib/data';
 import { useStations } from '@/lib/stations-store';
 import { useAuth } from '@/lib/auth-store';
+import { useT } from '@/lib/locale-store';
+import type { TranslationKey } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 
@@ -54,6 +56,7 @@ interface SubmitPriceScreenProps {
 type SubmitState = 'idle' | 'sending' | 'sent';
 
 export function SubmitPriceScreen({ onBack, onNavigate, initialStationId }: SubmitPriceScreenProps) {
+  const t = useT();
   const { stations, loading } = useStations();
   const { user, loading: authLoading } = useAuth();
 
@@ -118,7 +121,7 @@ export function SubmitPriceScreen({ onBack, onNavigate, initialStationId }: Subm
         setOcrLoading(false);
       }
     } catch (err: any) {
-      setError(err?.message ?? 'Не удалось загрузить фото');
+      setError(err?.message ?? t('submit.photo.uploadFailed'));
       setPhotoPreview(null);
       setPhotoUrl(null);
       setUploadingPhoto(false);
@@ -190,19 +193,19 @@ export function SubmitPriceScreen({ onBack, onNavigate, initialStationId }: Subm
           >
             <ArrowLeft className="w-5 h-5 text-slate-600" />
           </button>
-          <h1 className="text-lg font-semibold text-slate-900">Сообщить цену</h1>
+          <h1 className="text-lg font-semibold text-slate-900">{t('submit.title')}</h1>
         </div>
       </div>
 
       <div className="px-4 py-6">
         {!authLoading && !user && (
           <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-            Чтобы отправить цену, нужно войти.{' '}
+            {t('submit.authRequired')}{' '}
             <button
               onClick={() => onNavigate('login')}
               className="font-semibold underline"
             >
-              Войти →
+              {t('submit.authRequiredCta')}
             </button>
           </div>
         )}
@@ -240,7 +243,7 @@ export function SubmitPriceScreen({ onBack, onNavigate, initialStationId }: Subm
                 disabled={uploadingPhoto}
                 className="w-full px-4 py-2.5 text-sm font-medium text-slate-700 bg-white border-t border-slate-200 hover:bg-slate-50 disabled:opacity-50"
               >
-                Заменить фото
+                {t('submit.photo.replace')}
               </button>
             </div>
           ) : (
@@ -258,11 +261,11 @@ export function SubmitPriceScreen({ onBack, onNavigate, initialStationId }: Subm
                 )}
               </div>
               <p className="text-slate-700 font-medium text-center mb-2">
-                {uploadingPhoto ? 'Загружаем…' : 'Сфотографируйте табло цен'}
+                {uploadingPhoto ? t('submit.photo.uploading') : t('submit.photo.shoot')}
               </p>
               <p className="text-sm text-slate-500 flex items-center gap-1">
                 <Upload className="w-4 h-4" />
-                или выберите из галереи
+                {t('submit.photo.gallery')}
               </p>
             </button>
           )}
@@ -270,7 +273,7 @@ export function SubmitPriceScreen({ onBack, onNavigate, initialStationId }: Subm
 
         {/* Station picker */}
         <div className="mb-6">
-          <label className="text-sm font-medium text-slate-500 mb-2 block">АЗС</label>
+          <label className="text-sm font-medium text-slate-500 mb-2 block">{t('submit.station.label')}</label>
           {selectedStation && (
             <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl mb-3">
               <div
@@ -287,7 +290,7 @@ export function SubmitPriceScreen({ onBack, onNavigate, initialStationId }: Subm
             type="text"
             value={stationQuery}
             onChange={(e) => setStationQuery(e.target.value)}
-            placeholder="Найти другую АЗС…"
+            placeholder={t('submit.station.searchPlaceholder')}
             className="w-full h-11 px-4 bg-slate-50 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
           {stationMatches.length > 0 && (
@@ -317,7 +320,7 @@ export function SubmitPriceScreen({ onBack, onNavigate, initialStationId }: Subm
 
         {/* Fuel Type Selection */}
         <div className="mb-6">
-          <label className="text-sm font-medium text-slate-500 mb-3 block">Тип топлива</label>
+          <label className="text-sm font-medium text-slate-500 mb-3 block">{t('submit.fuel.label')}</label>
           <div className="flex flex-wrap gap-2">
             {fuelChips.map((fuel) => (
               <button
@@ -330,7 +333,7 @@ export function SubmitPriceScreen({ onBack, onNavigate, initialStationId }: Subm
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 )}
               >
-                {fuel.label}
+                {t(`fuel.${fuel.id}` as TranslationKey)}
               </button>
             ))}
           </div>
@@ -338,18 +341,18 @@ export function SubmitPriceScreen({ onBack, onNavigate, initialStationId }: Subm
 
         {/* Price Input */}
         <div className="mb-8">
-          <label className="text-sm font-medium text-slate-500 mb-3 block">Цена за литр</label>
+          <label className="text-sm font-medium text-slate-500 mb-3 block">{t('submit.price.label')}</label>
 
           {ocrLoading && (
             <div className="mb-3 flex items-center gap-2 text-sm text-slate-500">
               <Loader2 className="w-4 h-4 animate-spin" />
-              Распознаём цены на фото…
+              {t('submit.ocr.detecting')}
             </div>
           )}
 
           {!ocrLoading && ocrCandidates.length > 1 && (
             <div className="mb-3">
-              <p className="text-xs text-slate-500 mb-2">Распознано на фото — нажмите нужную:</p>
+              <p className="text-xs text-slate-500 mb-2">{t('submit.ocr.candidates')}</p>
               <div className="flex flex-wrap gap-2">
                 {ocrCandidates.map((c) => (
                   <button
@@ -393,7 +396,7 @@ export function SubmitPriceScreen({ onBack, onNavigate, initialStationId }: Subm
           <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 flex items-center gap-3 text-emerald-800">
             <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
             <p className="text-sm">
-              Спасибо! Цена отправлена на проверку. После подтверждения она появится у всех.
+              {t('submit.success')}
             </p>
           </div>
         ) : (
@@ -405,10 +408,10 @@ export function SubmitPriceScreen({ onBack, onNavigate, initialStationId }: Subm
             {submitState === 'sending' ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Отправляем…
+                {t('submit.cta.submitting')}
               </>
             ) : (
-              'Подтвердить'
+              t('submit.cta.submit')
             )}
           </Button>
         )}
@@ -416,7 +419,7 @@ export function SubmitPriceScreen({ onBack, onNavigate, initialStationId }: Subm
         {/* Karma Hint */}
         <div className="mt-6 flex items-center justify-center gap-2 text-sm text-slate-500">
           <Sparkles className="w-4 h-4 text-amber-500" />
-          <span>+10 кармы за подтверждённую цену</span>
+          <span>{t('submit.karmaHint')}</span>
         </div>
       </div>
 

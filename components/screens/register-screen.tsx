@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ArrowLeft, User, Mail, Lock, MapPin, Droplets, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth-store';
+import { useT } from '@/lib/locale-store';
 
 interface RegisterScreenProps {
   onBack: () => void;
@@ -12,6 +13,7 @@ interface RegisterScreenProps {
 }
 
 export function RegisterScreen({ onBack, onSuccess, onGoToLogin }: RegisterScreenProps) {
+  const t = useT();
   const { signUp } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -64,12 +66,10 @@ export function RegisterScreen({ onBack, onSuccess, onGoToLogin }: RegisterScree
         </div>
 
         <div className="w-full max-w-sm">
-          <h1 className="text-xl font-bold text-slate-900 mb-2 text-center">Регистрация</h1>
-          <p className="text-slate-600 text-center mb-8">
-            Создайте аккаунт, чтобы сообщать цены и получать карму.
-          </p>
+          <h1 className="text-xl font-bold text-slate-900 mb-2 text-center">{t('register.title')}</h1>
+          <p className="text-slate-600 text-center mb-8">{t('register.subtitle')}</p>
 
-          <label className="text-sm font-medium text-slate-500 mb-2 block">Имя</label>
+          <label className="text-sm font-medium text-slate-500 mb-2 block">{t('register.name')}</label>
           <div className="relative mb-4">
             <User className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
             <input
@@ -77,12 +77,12 @@ export function RegisterScreen({ onBack, onSuccess, onGoToLogin }: RegisterScree
               autoComplete="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Как вас зовут?"
+              placeholder={t('register.namePlaceholder')}
               className="w-full h-14 pl-12 pr-4 bg-slate-50 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
 
-          <label className="text-sm font-medium text-slate-500 mb-2 block">Email</label>
+          <label className="text-sm font-medium text-slate-500 mb-2 block">{t('login.email')}</label>
           <div className="relative mb-4">
             <Mail className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
             <input
@@ -96,7 +96,7 @@ export function RegisterScreen({ onBack, onSuccess, onGoToLogin }: RegisterScree
             />
           </div>
 
-          <label className="text-sm font-medium text-slate-500 mb-2 block">Пароль</label>
+          <label className="text-sm font-medium text-slate-500 mb-2 block">{t('login.password')}</label>
           <div className="relative mb-4">
             <Lock className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
             <input
@@ -104,7 +104,7 @@ export function RegisterScreen({ onBack, onSuccess, onGoToLogin }: RegisterScree
               autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Минимум 6 символов"
+              placeholder={t('login.passwordPlaceholder')}
               className="w-full h-14 pl-12 pr-12 bg-slate-50 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
             <button
@@ -116,7 +116,7 @@ export function RegisterScreen({ onBack, onSuccess, onGoToLogin }: RegisterScree
             </button>
           </div>
 
-          <label className="text-sm font-medium text-slate-500 mb-2 block">Подтвердите пароль</label>
+          <label className="text-sm font-medium text-slate-500 mb-2 block">{t('register.confirmPassword')}</label>
           <div className="relative mb-4">
             <Lock className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
             <input
@@ -124,13 +124,13 @@ export function RegisterScreen({ onBack, onSuccess, onGoToLogin }: RegisterScree
               autoComplete="new-password"
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
-              placeholder="Повторите пароль"
+              placeholder={t('register.confirmPlaceholder')}
               className="w-full h-14 pl-12 pr-4 bg-slate-50 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
 
           {confirm.length > 0 && !matches && (
-            <p className="text-sm text-red-600 mb-3 -mt-1">Пароли не совпадают</p>
+            <p className="text-sm text-red-600 mb-3 -mt-1">{t('register.passwordsDontMatch')}</p>
           )}
           {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
 
@@ -139,16 +139,16 @@ export function RegisterScreen({ onBack, onSuccess, onGoToLogin }: RegisterScree
             disabled={!canSubmit}
             className="w-full h-14 text-base font-semibold bg-emerald-600 hover:bg-emerald-700 rounded-xl"
           >
-            {submitting ? 'Создаём аккаунт…' : 'Зарегистрироваться'}
+            {submitting ? t('register.submitting') : t('register.submit')}
           </Button>
 
           <p className="text-sm text-slate-500 text-center mt-6">
-            Уже есть аккаунт?{' '}
+            {t('register.haveAccount')}{' '}
             <button
               onClick={onGoToLogin}
               className="text-emerald-600 font-semibold hover:underline"
             >
-              Войти
+              {t('register.goToLogin')}
             </button>
           </p>
         </div>

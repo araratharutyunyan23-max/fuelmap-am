@@ -9,6 +9,7 @@ import { BottomNav } from '@/components/bottom-nav';
 import { type Station } from '@/lib/data';
 import { useStations } from '@/lib/stations-store';
 import { useUserLocation } from '@/lib/user-location';
+import { useT } from '@/lib/locale-store';
 import { cn } from '@/lib/utils';
 
 function computeTopBrands(stations: Station[]) {
@@ -87,6 +88,7 @@ function createUserIcon() {
 }
 
 export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
+  const t = useT();
   const { stations, loading } = useStations();
   const { location, requesting, error: locationError, request: requestLocation } = useUserLocation();
   const [selectedFuel, setSelectedFuel] = useState('95');
@@ -150,7 +152,7 @@ export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               type="text"
-              placeholder="Ереван…"
+              placeholder={t('map.searchPlaceholder')}
               className="w-full pl-9 pr-4 py-2.5 bg-slate-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
@@ -174,13 +176,13 @@ export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
             {showBrandFilter && (
               <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-slate-200 z-[2000] py-1 overflow-hidden">
                 <div className="flex items-center justify-between px-3 py-2 border-b border-slate-100">
-                  <span className="text-sm font-semibold text-slate-900">Топ-5 сетей</span>
+                  <span className="text-sm font-semibold text-slate-900">{t('map.brands.title')}</span>
                   {selectedBrands.size > 0 && (
                     <button
                       onClick={() => setSelectedBrands(new Set())}
                       className="text-xs font-medium text-emerald-600 hover:text-emerald-700"
                     >
-                      Сбросить
+                      {t('map.brands.reset')}
                     </button>
                   )}
                 </div>
@@ -207,7 +209,7 @@ export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
               </div>
             )}
           </div>
-          <LanguageSwitcher selected="ru" className="hidden sm:flex" />
+          <LanguageSwitcher className="hidden sm:flex" />
         </div>
         <FuelChips selected={selectedFuel} onChange={setSelectedFuel} />
       </div>
@@ -237,7 +239,7 @@ export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
         {showLocationError && locationError && (
           <div className="absolute right-4 left-4 z-[1100] flex items-start gap-2 bg-white shadow-lg border border-red-200 rounded-xl px-3 py-2 text-sm text-red-700"
                style={{ bottom: 'calc(240px + 64px)' }}>
-            <span className="flex-1">{locationError}</span>
+            <span className="flex-1">{t(locationError as any)}</span>
             <button onClick={() => setShowLocationError(false)} className="text-red-400 hover:text-red-600">
               <X className="w-4 h-4" />
             </button>
@@ -306,7 +308,7 @@ export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-slate-900">{visibleStations.length} заправок рядом</span>
+              <span className="font-semibold text-slate-900">{t('map.bottomSheet.count', { n: visibleStations.length })}</span>
               <ChevronUp 
                 className={cn(
                   'w-4 h-4 text-slate-400 transition-transform',
@@ -329,7 +331,7 @@ export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
                     : 'text-slate-500'
                 )}
               >
-                Ближе
+                {t('map.sort.distance')}
               </button>
               <button
                 onClick={() => setSortBy('price')}
@@ -340,7 +342,7 @@ export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
                     : 'text-slate-500'
                 )}
               >
-                Дешевле
+                {t('map.sort.price')}
               </button>
             </div>
           </div>

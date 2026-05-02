@@ -4,9 +4,9 @@ import { useState } from 'react';
 import { ArrowLeft, Share2, Navigation, MessageSquare, Star, TrendingDown, TrendingUp, ChevronRight, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BottomNav } from '@/components/bottom-nav';
-import { type Station, reviews, priceHistory } from '@/lib/data';
+import { type Station, reviews } from '@/lib/data';
+import { useT } from '@/lib/locale-store';
 import { cn } from '@/lib/utils';
-import { LineChart, Line, ResponsiveContainer, Area, AreaChart } from 'recharts';
 
 interface StationDetailScreenProps {
   station: Station;
@@ -17,20 +17,17 @@ interface StationDetailScreenProps {
 function buildRouteUrls(lat: number, lng: number) {
   return [
     {
-      name: 'Yandex Карты',
-      sub: 'или Yandex Навигатор',
+      key: 'yandex' as const,
       url: `https://yandex.com/maps/?rtext=~${lat},${lng}&rtt=auto&z=14`,
       logo: '🟡',
     },
     {
-      name: 'Google Maps',
-      sub: '',
+      key: 'google' as const,
       url: `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`,
       logo: '🟢',
     },
     {
-      name: 'Apple Карты',
-      sub: 'iPhone / iPad',
+      key: 'apple' as const,
       url: `https://maps.apple.com/?daddr=${lat},${lng}&dirflg=d`,
       logo: '🔵',
     },
@@ -38,6 +35,7 @@ function buildRouteUrls(lat: number, lng: number) {
 }
 
 export function StationDetailScreen({ station, onBack, onNavigate }: StationDetailScreenProps) {
+  const t = useT();
   const [showRouteSheet, setShowRouteSheet] = useState(false);
   const routeUrls = buildRouteUrls(station.lat, station.lng);
   return (
@@ -73,9 +71,9 @@ export function StationDetailScreen({ station, onBack, onNavigate }: StationDeta
               <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
               <span className="font-medium text-slate-900">{station.rating}</span>
             </div>
-            <span className="text-slate-400">({station.reviews} отзывов)</span>
+            <span className="text-slate-400">({t('detail.reviews', { n: station.reviews })})</span>
           </div>
-          <p className="text-slate-500">{station.address} · {station.distance} км</p>
+          <p className="text-slate-500">{station.address} · {station.distance} {t('common.km')}</p>
 
           {/* Quick Actions */}
           <div className="flex gap-3 mt-4">
@@ -85,7 +83,7 @@ export function StationDetailScreen({ station, onBack, onNavigate }: StationDeta
               onClick={() => setShowRouteSheet(true)}
             >
               <Navigation className="w-4 h-4" />
-              Маршрут
+              {t('detail.route')}
             </Button>
             <Button
               variant="outline"
@@ -93,20 +91,18 @@ export function StationDetailScreen({ station, onBack, onNavigate }: StationDeta
               onClick={() => onNavigate('submit')}
             >
               <MessageSquare className="w-4 h-4" />
-              Сообщить цену
+              {t('detail.reportPrice')}
             </Button>
           </div>
         </div>
 
         {/* Prices */}
         <div className="mb-4">
-          <h2 className="text-lg font-semibold text-slate-900 mb-3">Цены на топливо</h2>
+          <h2 className="text-lg font-semibold text-slate-900 mb-3">{t('detail.prices.title')}</h2>
           {station.prices.length === 0 ? (
             <div className="bg-slate-50 rounded-xl p-6 text-center">
-              <p className="text-sm text-slate-500">Цены ещё не указаны</p>
-              <p className="text-xs text-slate-400 mt-1">
-                Заправлялись здесь? Сообщите цену через кнопку выше.
-              </p>
+              <p className="text-sm text-slate-500">{t('detail.prices.empty.title')}</p>
+              <p className="text-xs text-slate-400 mt-1">{t('detail.prices.empty.hint')}</p>
             </div>
           ) : (
           <div className="grid grid-cols-2 gap-3">
@@ -142,55 +138,6 @@ export function StationDetailScreen({ station, onBack, onNavigate }: StationDeta
             ))}
           </div>
           )}
-        </div>
-
-        {/* Price History Chart */}
-        <div className="mb-4">
-          <h2 className="text-lg font-semibold text-slate-900 mb-3">История цен</h2>
-          <div className="bg-slate-50 rounded-xl p-4">
-            <div className="h-32">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={priceHistory}>
-                  <defs>
-                    <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#059669" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#059669" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <Area
-                    type="monotone"
-                    dataKey="price"
-                    stroke="#059669"
-                    strokeWidth={2}
-                    fill="url(#colorPrice)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="flex justify-between text-xs text-slate-400 mt-2">
-              <span>1 апр</span>
-              <span>30 апр</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Hours */}
-        <div className="mb-4">
-          <h2 className="text-lg font-semibold text-slate-900 mb-3">Часы работы</h2>
-          <div className="bg-slate-50 rounded-xl p-4 space-y-2">
-            {station.hours.map((hour) => (
-              <div
-                key={hour.day}
-                className={cn(
-                  'flex justify-between text-sm',
-                  hour.isToday && 'font-semibold text-emerald-600'
-                )}
-              >
-                <span>{hour.day}</span>
-                <span>{hour.time}</span>
-              </div>
-            ))}
-          </div>
         </div>
 
         {/* Reviews */}
@@ -244,36 +191,45 @@ export function StationDetailScreen({ station, onBack, onNavigate }: StationDeta
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-slate-900">Открыть в…</h3>
+              <h3 className="text-lg font-semibold text-slate-900">{t('detail.routePicker.title')}</h3>
               <button
                 onClick={() => setShowRouteSheet(false)}
                 className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500"
-                aria-label="Закрыть"
+                aria-label={t('common.close')}
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="space-y-2">
-              {routeUrls.map((opt) => (
-                <a
-                  key={opt.name}
-                  href={opt.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => setShowRouteSheet(false)}
-                  className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors"
-                >
-                  <span className="text-2xl">{opt.logo}</span>
-                  <div className="flex-1 text-left">
-                    <p className="font-medium text-slate-900">{opt.name}</p>
-                    {opt.sub && <p className="text-xs text-slate-500">{opt.sub}</p>}
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-slate-400" />
-                </a>
-              ))}
+              {routeUrls.map((opt) => {
+                const name = t(`detail.routePicker.${opt.key}` as any);
+                const sub =
+                  opt.key === 'yandex'
+                    ? t('detail.routePicker.yandexSub')
+                    : opt.key === 'apple'
+                    ? t('detail.routePicker.appleSub')
+                    : '';
+                return (
+                  <a
+                    key={opt.key}
+                    href={opt.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setShowRouteSheet(false)}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors"
+                  >
+                    <span className="text-2xl">{opt.logo}</span>
+                    <div className="flex-1 text-left">
+                      <p className="font-medium text-slate-900">{name}</p>
+                      {sub && <p className="text-xs text-slate-500">{sub}</p>}
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </a>
+                );
+              })}
             </div>
             <p className="text-xs text-slate-400 text-center mt-4">
-              Откроется приложение, если установлено, иначе веб-версия.
+              {t('detail.routePicker.hint')}
             </p>
           </div>
         </div>

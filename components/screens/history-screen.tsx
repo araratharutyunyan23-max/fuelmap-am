@@ -3,12 +3,14 @@
 import { Calendar, TrendingDown, TrendingUp, Fuel } from 'lucide-react';
 import { BottomNav } from '@/components/bottom-nav';
 import { userProfile } from '@/lib/data';
+import { useT } from '@/lib/locale-store';
 
 interface HistoryScreenProps {
   onNavigate: (screen: string) => void;
 }
 
 export function HistoryScreen({ onNavigate }: HistoryScreenProps) {
+  const t = useT();
   // Extended history data
   const historyData = [
     ...userProfile.recentFills,
@@ -27,7 +29,7 @@ export function HistoryScreen({ onNavigate }: HistoryScreenProps) {
     <div className="min-h-screen bg-slate-50 pb-20">
       {/* Header */}
       <div className="bg-white border-b border-slate-200 px-4 py-4 sticky top-0 z-10">
-        <h1 className="text-lg font-semibold text-slate-900">История заправок</h1>
+        <h1 className="text-lg font-semibold text-slate-900">{t('history.title')}</h1>
       </div>
 
       {/* Summary Cards */}
@@ -38,7 +40,7 @@ export function HistoryScreen({ onNavigate }: HistoryScreenProps) {
               <div className="p-2 bg-emerald-100 rounded-lg">
                 <TrendingDown className="w-4 h-4 text-emerald-600" />
               </div>
-              <span className="text-sm text-slate-500">Всего потрачено</span>
+              <span className="text-sm text-slate-500">{t('history.totalSpent')}</span>
             </div>
             <p className="text-2xl font-bold text-slate-900">{totalSpent.toLocaleString()} ֏</p>
           </div>
@@ -47,9 +49,9 @@ export function HistoryScreen({ onNavigate }: HistoryScreenProps) {
               <div className="p-2 bg-orange-100 rounded-lg">
                 <Fuel className="w-4 h-4 text-orange-600" />
               </div>
-              <span className="text-sm text-slate-500">Всего литров</span>
+              <span className="text-sm text-slate-500">{t('history.totalLiters')}</span>
             </div>
-            <p className="text-2xl font-bold text-slate-900">{totalLiters.toFixed(1)} л</p>
+            <p className="text-2xl font-bold text-slate-900">{totalLiters.toFixed(1)} {t('history.litersSuffix')}</p>
           </div>
         </div>
 
@@ -81,7 +83,7 @@ export function HistoryScreen({ onNavigate }: HistoryScreenProps) {
               </div>
               <div className="text-right flex-shrink-0">
                 <p className="font-semibold text-slate-900">{fill.amount.toLocaleString()} ֏</p>
-                <p className="text-sm text-slate-500">{fill.liters} л</p>
+                <p className="text-sm text-slate-500">{fill.liters} {t('history.litersSuffix')}</p>
               </div>
             </div>
           ))}

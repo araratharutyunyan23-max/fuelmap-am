@@ -16,6 +16,7 @@ import { type Station } from '@/lib/data';
 import { StationsProvider } from '@/lib/stations-store';
 import { AuthProvider } from '@/lib/auth-store';
 import { UserLocationProvider } from '@/lib/user-location';
+import { LocaleProvider } from '@/lib/locale-store';
 
 type Screen = 'onboarding' | 'map' | 'list' | 'detail' | 'cheapest' | 'submit' | 'profile' | 'settings' | 'history' | 'login' | 'register';
 
@@ -44,6 +45,7 @@ export default function FuelMapApp() {
   };
 
   return (
+    <LocaleProvider>
     <AuthProvider>
     <UserLocationProvider>
     <StationsProvider>
@@ -126,5 +128,6 @@ export default function FuelMapApp() {
     </StationsProvider>
     </UserLocationProvider>
     </AuthProvider>
+    </LocaleProvider>
   );
 }

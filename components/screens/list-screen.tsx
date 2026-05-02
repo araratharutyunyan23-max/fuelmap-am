@@ -7,6 +7,7 @@ import { FuelChips } from '@/components/fuel-chips';
 import { BottomNav } from '@/components/bottom-nav';
 import { type Station } from '@/lib/data';
 import { useStations } from '@/lib/stations-store';
+import { useT } from '@/lib/locale-store';
 import { cn } from '@/lib/utils';
 
 interface ListScreenProps {
@@ -15,6 +16,7 @@ interface ListScreenProps {
 }
 
 export function ListScreen({ onNavigate, onStationSelect }: ListScreenProps) {
+  const t = useT();
   const { stations } = useStations();
   const [selectedFuel, setSelectedFuel] = useState('95');
   const [sortBy, setSortBy] = useState<'distance' | 'price'>('price');
@@ -44,7 +46,7 @@ export function ListScreen({ onNavigate, onStationSelect }: ListScreenProps) {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               type="text"
-              placeholder="Ереван…"
+              placeholder={t('map.searchPlaceholder')}
               className="w-full pl-9 pr-4 py-2.5 bg-slate-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
@@ -65,7 +67,7 @@ export function ListScreen({ onNavigate, onStationSelect }: ListScreenProps) {
                   : 'text-slate-500'
               )}
             >
-              Ближе
+              {t('map.sort.distance')}
             </button>
             <button
               onClick={() => setSortBy('price')}
@@ -76,10 +78,10 @@ export function ListScreen({ onNavigate, onStationSelect }: ListScreenProps) {
                   : 'text-slate-500'
               )}
             >
-              Дешевле
+              {t('map.sort.price')}
             </button>
           </div>
-          <LanguageSwitcher selected="ru" className="hidden sm:flex" />
+          <LanguageSwitcher className="hidden sm:flex" />
         </div>
 
         <FuelChips selected={selectedFuel} onChange={setSelectedFuel} />
@@ -117,11 +119,11 @@ export function ListScreen({ onNavigate, onStationSelect }: ListScreenProps) {
                     </span>
                   </div>
                   <p className="text-sm text-slate-500">
-                    {station.address} · {station.distance} км
+                    {station.address} · {station.distance} {t('common.km')}
                   </p>
                   {isCheapest && (
                     <span className="inline-block mt-2 px-2 py-1 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full">
-                      Самый дешёвый
+                      {t('list.cheapest')}
                     </span>
                   )}
                 </div>
@@ -136,7 +138,7 @@ export function ListScreen({ onNavigate, onStationSelect }: ListScreenProps) {
                         priceDiff < 0 ? 'text-emerald-600' : priceDiff > 0 ? 'text-red-500' : 'text-slate-400'
                       )}
                     >
-                      {priceDiff < 0 ? '' : priceDiff > 0 ? '+' : ''}{priceDiff} ֏ от средней
+                      {t('list.priceFromAvg', { diff: `${priceDiff > 0 ? '+' : ''}${priceDiff}` })}
                     </p>
                   </div>
                 )}

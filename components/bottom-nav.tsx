@@ -1,6 +1,7 @@
 'use client';
 
 import { Map, List, History, User, Plus } from 'lucide-react';
+import { useT } from '@/lib/locale-store';
 import { cn } from '@/lib/utils';
 
 interface BottomNavProps {
@@ -9,12 +10,13 @@ interface BottomNavProps {
 }
 
 export function BottomNav({ active, onNavigate }: BottomNavProps) {
+  const t = useT();
   const items = [
-    { id: 'map', label: 'Карта', icon: Map },
-    { id: 'list', label: 'Список', icon: List },
+    { id: 'map', label: t('nav.map'), icon: Map },
+    { id: 'list', label: t('nav.list'), icon: List },
     { id: 'add', label: '', icon: Plus, isFab: true },
-    { id: 'history', label: 'История', icon: History },
-    { id: 'profile', label: 'Профиль', icon: User },
+    { id: 'history', label: t('nav.history'), icon: History },
+    { id: 'profile', label: t('nav.profile'), icon: User },
   ];
 
   return (

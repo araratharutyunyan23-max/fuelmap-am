@@ -2,6 +2,8 @@
 
 import { cn } from '@/lib/utils';
 import { FUEL_TYPES } from '@/lib/data';
+import { useT } from '@/lib/locale-store';
+import type { TranslationKey } from '@/lib/i18n';
 
 interface FuelChipsProps {
   selected: string;
@@ -10,6 +12,7 @@ interface FuelChipsProps {
 }
 
 export function FuelChips({ selected, onChange, className }: FuelChipsProps) {
+  const t = useT();
   return (
     <div className={cn('flex gap-2 overflow-x-auto pb-1 scrollbar-hide', className)}>
       {FUEL_TYPES.map((fuel) => (
@@ -23,7 +26,7 @@ export function FuelChips({ selected, onChange, className }: FuelChipsProps) {
               : 'bg-white text-slate-600 border border-slate-200 hover:border-emerald-300'
           )}
         >
-          {fuel.label}
+          {t(`fuel.${fuel.id}` as TranslationKey)}
         </button>
       ))}
     </div>

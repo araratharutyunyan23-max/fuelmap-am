@@ -8,6 +8,8 @@ import { Switch } from '@/components/ui/switch';
 import { BottomNav } from '@/components/bottom-nav';
 import { FUEL_TYPES, type Station } from '@/lib/data';
 import { useStations } from '@/lib/stations-store';
+import { useT } from '@/lib/locale-store';
+import type { TranslationKey } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 
 const MapContainer = dynamic(
@@ -41,6 +43,7 @@ function createCustomIcon(color: string, rank: number) {
 }
 
 export function CheapestScreen({ onBack, onNavigate, onStationSelect }: CheapestScreenProps) {
+  const t = useT();
   const { stations } = useStations();
   const [selectedFuel, setSelectedFuel] = useState('95');
   const [priceAlert, setPriceAlert] = useState('510');
@@ -81,8 +84,7 @@ export function CheapestScreen({ onBack, onNavigate, onStationSelect }: Cheapest
             <ArrowLeft className="w-5 h-5 text-slate-600" />
           </button>
           <div>
-            <h1 className="text-lg font-semibold text-slate-900">Сегодня дешевле всего</h1>
-            <p className="text-sm text-slate-500">Обновлено 14:32</p>
+            <h1 className="text-lg font-semibold text-slate-900">{t('cheapest.title')}</h1>
           </div>
         </div>
 
@@ -99,7 +101,7 @@ export function CheapestScreen({ onBack, onNavigate, onStationSelect }: Cheapest
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               )}
             >
-              {fuel.label}
+              {t(`fuel.${fuel.id}` as TranslationKey)}
             </button>
           ))}
         </div>
@@ -147,7 +149,7 @@ export function CheapestScreen({ onBack, onNavigate, onStationSelect }: Cheapest
                 <div className="text-right flex-shrink-0">
                   <p className="text-xl font-bold text-emerald-600">{station.price} ֏</p>
                   <span className="inline-block px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full">
-                    {priceDiff} ֏ от средней
+                    {t('list.priceFromAvg', { diff: `${priceDiff > 0 ? '+' : ''}${priceDiff}` })}
                   </span>
                 </div>
               </div>
@@ -193,7 +195,7 @@ export function CheapestScreen({ onBack, onNavigate, onStationSelect }: Cheapest
             </div>
             <div className="flex-1">
               <h3 className="font-medium text-slate-900 mb-1">
-                Уведомить когда цена упадёт ниже…
+                {t('cheapest.priceAlertTitle')}
               </h3>
               <div className="flex items-center gap-3">
                 <div className="flex-1 relative">

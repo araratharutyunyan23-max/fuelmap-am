@@ -4,6 +4,7 @@ import { User, ChevronRight, Lock, LogIn, LogOut } from 'lucide-react';
 import { BottomNav } from '@/components/bottom-nav';
 import { userProfile } from '@/lib/data';
 import { useAuth } from '@/lib/auth-store';
+import { useT } from '@/lib/locale-store';
 import { cn } from '@/lib/utils';
 
 interface ProfileScreenProps {
@@ -11,11 +12,12 @@ interface ProfileScreenProps {
 }
 
 export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
+  const t = useT();
   const { user, signOut } = useAuth();
   const displayName =
     (user?.user_metadata?.name as string | undefined) ||
     user?.email?.split('@')[0] ||
-    'Гость';
+    'Guest';
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
@@ -29,7 +31,7 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
             <h1 className="text-xl font-bold text-slate-900 truncate">{displayName}</h1>
             <div className="flex items-center gap-2 mt-1">
               <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-sm font-medium rounded-full">
-                {userProfile.level} · {userProfile.karma} кармы
+                {userProfile.level} · {userProfile.karma} {t('profile.karmaSuffix')}
               </span>
             </div>
             {user?.email && (
@@ -40,7 +42,7 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
             <button
               onClick={signOut}
               className="p-2 hover:bg-slate-100 rounded-lg text-slate-500"
-              title="Выйти"
+              title={t('profile.signOut')}
             >
               <LogOut className="w-5 h-5" />
             </button>
@@ -50,7 +52,7 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
               className="px-3 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 flex items-center gap-1"
             >
               <LogIn className="w-4 h-4" />
-              Войти
+              {t('profile.signIn')}
             </button>
           )}
         </div>
@@ -61,15 +63,15 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-white rounded-xl p-4 text-center shadow-sm">
             <p className="text-2xl font-bold text-emerald-600">{userProfile.pricesSubmitted}</p>
-            <p className="text-sm text-slate-500">цен</p>
+            <p className="text-sm text-slate-500">{t('profile.stats.prices')}</p>
           </div>
           <div className="bg-white rounded-xl p-4 text-center shadow-sm">
             <p className="text-2xl font-bold text-emerald-600">{userProfile.saved}</p>
-            <p className="text-sm text-slate-500">֏ сэкономлено</p>
+            <p className="text-sm text-slate-500">{t('profile.stats.saved')}</p>
           </div>
           <div className="bg-white rounded-xl p-4 text-center shadow-sm">
             <p className="text-2xl font-bold text-emerald-600">{userProfile.visitedStations}</p>
-            <p className="text-sm text-slate-500">АЗС</p>
+            <p className="text-sm text-slate-500">{t('profile.stats.stations')}</p>
           </div>
         </div>
       </div>
@@ -77,9 +79,9 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
       {/* Recent Fills */}
       <div className="px-4 mb-4">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-slate-900">Последние заправки</h2>
+          <h2 className="text-lg font-semibold text-slate-900">{t('profile.recentFills')}</h2>
           <button className="text-sm text-emerald-600 font-medium flex items-center gap-1">
-            Все
+            {t('profile.viewAll')}
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
@@ -108,7 +110,7 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
 
       {/* Saved Stations */}
       <div className="px-4 mb-4">
-        <h2 className="text-lg font-semibold text-slate-900 mb-3">Сохранённые АЗС</h2>
+        <h2 className="text-lg font-semibold text-slate-900 mb-3">{t('profile.savedStations')}</h2>
         <div className="flex gap-3 overflow-x-auto pb-2">
           {userProfile.savedStations.map((station) => (
             <div
@@ -129,7 +131,7 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
 
       {/* Achievements */}
       <div className="px-4 mb-4">
-        <h2 className="text-lg font-semibold text-slate-900 mb-3">Достижения</h2>
+        <h2 className="text-lg font-semibold text-slate-900 mb-3">{t('profile.achievements')}</h2>
         <div className="grid grid-cols-3 gap-3">
           {userProfile.achievements.map((achievement) => (
             <div
