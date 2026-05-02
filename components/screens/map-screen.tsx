@@ -10,18 +10,17 @@ import { type Station } from '@/lib/data';
 import { useStations } from '@/lib/stations-store';
 import { useUserLocation } from '@/lib/user-location';
 import { useT } from '@/lib/locale-store';
+import { getBrand } from '@/lib/brands';
 import { cn } from '@/lib/utils';
 
-function computeTopBrands(stations: Station[]) {
+function computeAllBrands(stations: Station[]) {
   const counts: Record<string, { count: number; color: string }> = {};
   for (const s of stations) {
     if (!counts[s.brand]) counts[s.brand] = { count: 0, color: s.brandColor };
     counts[s.brand].count++;
   }
   return Object.entries(counts)
-    .filter(([b]) => b !== 'Other')
     .sort((a, b) => b[1].count - a[1].count)
-    .slice(0, 5)
     .map(([name, { count, color }]) => ({ name, count, color }));
 }
 
@@ -61,14 +60,17 @@ interface MapScreenProps {
   onStationSelect: (station: Station) => void;
 }
 
-function createCustomIcon(color: string) {
+function createCustomIcon(color: string, initial: string, muted = false) {
   if (typeof window === 'undefined') return undefined;
   const L = require('leaflet');
+  // `muted` = no data for the currently selected fuel: low opacity so the
+  // marker is still visible on the map but visually de-emphasised.
+  const opacity = muted ? 0.35 : 1;
   return L.divIcon({
     className: 'custom-marker',
-    html: `<div style="width: 28px; height: 28px; background-color: ${color}; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>`,
-    iconSize: [28, 28],
-    iconAnchor: [14, 14],
+    html: `<div style="width: 32px; height: 32px; background-color: ${color}; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); opacity: ${opacity}; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 11px; letter-spacing: 0.5px; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">${initial}</div>`,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
   });
 }
 
@@ -99,7 +101,7 @@ export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
   const [showLocationError, setShowLocationError] = useState(false);
   const [selectedBrands, setSelectedBrands] = useState<Set<string>>(new Set());
   const filterRef = useRef<HTMLDivElement>(null);
-  const topBrands = useMemo(() => computeTopBrands(stations), [stations]);
+  const allBrands = useMemo(() => computeAllBrands(stations), [stations]);
 
   useEffect(() => {
     if (locationError) setShowLocationError(true);
@@ -133,13 +135,19 @@ export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
     [selectedBrands, stations]
   );
 
-  const sortedStations = useMemo(() => [...visibleStations].sort((a, b) => {
+  // Stations that actually have a price for the currently selected fuel.
+  // The bottom-sheet list shows only these — empty rows are confusing UX.
+  const stationsWithFuel = useMemo(
+    () => visibleStations.filter(s => s.prices.some(p => p.type === selectedFuel)),
+    [visibleStations, selectedFuel]
+  );
+
+  const sortedStations = useMemo(() => [...stationsWithFuel].sort((a, b) => {
     if (sortBy === 'distance') return a.distance - b.distance;
-    // Stations without the selected fuel sink to the bottom of price-sort.
-    const priceA = a.prices.find(p => p.type === selectedFuel)?.price ?? Number.POSITIVE_INFINITY;
-    const priceB = b.prices.find(p => p.type === selectedFuel)?.price ?? Number.POSITIVE_INFINITY;
+    const priceA = a.prices.find(p => p.type === selectedFuel)!.price;
+    const priceB = b.prices.find(p => p.type === selectedFuel)!.price;
     return priceA - priceB;
-  }), [visibleStations, sortBy, selectedFuel]);
+  }), [stationsWithFuel, sortBy, selectedFuel]);
 
   const nearbyStations = sortedStations.slice(0, 3);
 
@@ -174,8 +182,8 @@ export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
               )}
             </button>
             {showBrandFilter && (
-              <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-slate-200 z-[2000] py-1 overflow-hidden">
-                <div className="flex items-center justify-between px-3 py-2 border-b border-slate-100">
+              <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-slate-200 z-[2000] overflow-hidden flex flex-col" style={{ maxHeight: 'calc(100vh - 180px)' }}>
+                <div className="flex items-center justify-between px-3 py-2 border-b border-slate-100 flex-shrink-0">
                   <span className="text-sm font-semibold text-slate-900">{t('map.brands.title')}</span>
                   {selectedBrands.size > 0 && (
                     <button
@@ -186,26 +194,28 @@ export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
                     </button>
                   )}
                 </div>
-                {topBrands.map(({ name, count, color }) => {
-                  const checked = selectedBrands.has(name);
-                  return (
-                    <button
-                      key={name}
-                      onClick={() => toggleBrand(name)}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50 transition-colors"
-                    >
-                      <div className={cn(
-                        'w-4 h-4 rounded border-2 flex items-center justify-center transition-colors',
-                        checked ? 'bg-emerald-600 border-emerald-600' : 'border-slate-300'
-                      )}>
-                        {checked && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
-                      </div>
-                      <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
-                      <span className="flex-1 text-left text-sm font-medium text-slate-900">{name}</span>
-                      <span className="text-xs text-slate-400">{count}</span>
-                    </button>
-                  );
-                })}
+                <div className="overflow-y-auto py-1 overscroll-contain">
+                  {allBrands.map(({ name, count, color }) => {
+                    const checked = selectedBrands.has(name);
+                    return (
+                      <button
+                        key={name}
+                        onClick={() => toggleBrand(name)}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50 transition-colors"
+                      >
+                        <div className={cn(
+                          'w-4 h-4 rounded border-2 flex items-center justify-center transition-colors',
+                          checked ? 'bg-emerald-600 border-emerald-600' : 'border-slate-300'
+                        )}>
+                          {checked && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                        </div>
+                        <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+                        <span className="flex-1 text-left text-sm font-medium text-slate-900">{name}</span>
+                        <span className="text-xs text-slate-400">{count}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>
@@ -265,8 +275,9 @@ export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
               />
             )}
             {visibleStations.map((station) => {
-              const icon = createCustomIcon(station.brandColor);
               const price = station.prices.find(p => p.type === selectedFuel);
+              const initial = getBrand(station.brand)?.initial ?? station.brand.slice(0, 2).toUpperCase();
+              const icon = createCustomIcon(station.brandColor, initial, !price);
               return (
                 <Marker
                   key={station.id}
@@ -308,7 +319,7 @@ export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-slate-900">{t('map.bottomSheet.count', { n: visibleStations.length })}</span>
+              <span className="font-semibold text-slate-900">{t('map.bottomSheet.count', { n: stationsWithFuel.length })}</span>
               <ChevronUp 
                 className={cn(
                   'w-4 h-4 text-slate-400 transition-transform',

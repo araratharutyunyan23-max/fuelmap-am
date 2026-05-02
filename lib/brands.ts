@@ -18,21 +18,23 @@ export interface Brand {
   displayName: string;
   color: string;
   tier: BrandTier;
+  // Two-letter code shown on map markers. Picked to be visually distinct
+  // (Gulf/Gastop/Gazprom all start with G — without explicit codes the markers
+  // wouldn't be tellable apart at a glance).
+  initial: string;
 }
 
 export const BRANDS: Brand[] = [
-  { slug: 'CPS',        displayName: 'CPS',        color: '#06b6d4', tier: 1 },
-  { slug: 'Flash',      displayName: 'Flash',      color: '#dc2626', tier: 1 },
-  { slug: 'Max Oil',    displayName: 'Max Oil',    color: '#0d9488', tier: 1 },
-  { slug: 'RAN Oil',    displayName: 'RAN Oil',    color: '#d97706', tier: 1 },
-  { slug: 'Orange',     displayName: 'Orange',     color: '#c2410c', tier: 1 },
-  { slug: 'Gastop',     displayName: 'Gastop',     color: '#65a30d', tier: 1 },
-  { slug: 'Titan',      displayName: 'Titan',      color: '#e11d48', tier: 1 },
-  { slug: 'Art Petrol', displayName: 'Art Petrol', color: '#db2777', tier: 1 },
-  { slug: 'Gulf',       displayName: 'Gulf',       color: '#0c4a6e', tier: 1 },
-  { slug: 'Shell',      displayName: 'Shell',      color: '#fbbf24', tier: 1 },
-  { slug: 'Gazprom',    displayName: 'Gazprom',    color: '#1e40af', tier: 2 },
-  { slug: 'Mika',       displayName: 'Mika',       color: '#7c3aed', tier: 2 },
+  { slug: 'CPS',        displayName: 'CPS',        color: '#06b6d4', tier: 1, initial: 'CP' },
+  { slug: 'Flash',      displayName: 'Flash',      color: '#dc2626', tier: 1, initial: 'FL' },
+  { slug: 'Max Oil',    displayName: 'Max Oil',    color: '#0d9488', tier: 1, initial: 'MX' },
+  { slug: 'RAN Oil',    displayName: 'RAN Oil',    color: '#d97706', tier: 1, initial: 'RN' },
+  { slug: 'Orange',     displayName: 'Orange',     color: '#c2410c', tier: 1, initial: 'OR' },
+  { slug: 'Gastop',     displayName: 'Gastop',     color: '#65a30d', tier: 1, initial: 'GS' },
+  { slug: 'Titan',      displayName: 'Titan',      color: '#e11d48', tier: 1, initial: 'TI' },
+  { slug: 'Art Petrol', displayName: 'Art Petrol', color: '#db2777', tier: 1, initial: 'AR' },
+  { slug: 'Gulf',       displayName: 'Gulf',       color: '#0c4a6e', tier: 1, initial: 'GF' },
+  { slug: 'Shell',      displayName: 'Shell',      color: '#fbbf24', tier: 1, initial: 'SH' },
 ];
 
 const BY_SLUG: Record<string, Brand> = Object.fromEntries(

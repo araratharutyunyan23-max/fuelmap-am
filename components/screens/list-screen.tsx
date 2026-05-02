@@ -21,11 +21,16 @@ export function ListScreen({ onNavigate, onStationSelect }: ListScreenProps) {
   const [selectedFuel, setSelectedFuel] = useState('95');
   const [sortBy, setSortBy] = useState<'distance' | 'price'>('price');
 
-  const sortedStations = [...stations].sort((a, b) => {
+  // Show only stations that actually have a price for the selected fuel —
+  // empty rows for unsupported fuels (e.g. Regular outside Flash) are confusing.
+  const stationsWithFuel = stations.filter((s) =>
+    s.prices.some((p) => p.type === selectedFuel)
+  );
+
+  const sortedStations = [...stationsWithFuel].sort((a, b) => {
     if (sortBy === 'distance') return a.distance - b.distance;
-    // Stations without the selected fuel sink to the bottom of price-sort.
-    const priceA = a.prices.find(p => p.type === selectedFuel)?.price ?? Number.POSITIVE_INFINITY;
-    const priceB = b.prices.find(p => p.type === selectedFuel)?.price ?? Number.POSITIVE_INFINITY;
+    const priceA = a.prices.find((p) => p.type === selectedFuel)!.price;
+    const priceB = b.prices.find((p) => p.type === selectedFuel)!.price;
     return priceA - priceB;
   });
 

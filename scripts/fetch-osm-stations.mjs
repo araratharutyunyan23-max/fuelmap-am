@@ -18,7 +18,6 @@ out center tags;
 const BRANDS = [
   { match: /flash|ֆլեշ|флэш|флеш/i, name: 'Flash', color: '#dc2626' },
   { match: /shell|շելլ|шелл/i, name: 'Shell', color: '#fbbf24' },
-  { match: /gazprom|газпром|գազպրոմ/i, name: 'Gazprom', color: '#1e40af' },
   { match: /max\s*oil|макс\s*ойл/i, name: 'Max Oil', color: '#0d9488' },
   { match: /\bcps\b/i, name: 'CPS', color: '#06b6d4' },
   { match: /ran\s*oil|ран\s*ойл/i, name: 'RAN Oil', color: '#d97706' },
@@ -26,7 +25,6 @@ const BRANDS = [
   { match: /gastop|газтоп/i, name: 'Gastop', color: '#65a30d' },
   { match: /\btitan\b|տիտան|титан/i, name: 'Titan', color: '#e11d48' },
   { match: /\bgulf\b|гулф/i, name: 'Gulf', color: '#0c4a6e' },
-  { match: /\bmika\b|միկա|мика/i, name: 'Mika', color: '#7c3aed' },
   { match: /art\s*petrol|արտ\s*պետրոլ|арт\s*петрол/i, name: 'Art Petrol', color: '#db2777' },
 ];
 
