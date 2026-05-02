@@ -15,10 +15,8 @@ export interface Station {
     type: FuelType;
     label: string;
     price: number;
-    trend: number;
     updatedAgo: string;
   }[];
-  hours: { day: string; time: string; isToday?: boolean }[];
 }
 
 export const FUEL_TYPES = [

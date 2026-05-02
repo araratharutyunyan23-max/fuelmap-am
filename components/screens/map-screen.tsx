@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { Search, SlidersHorizontal, ChevronUp, TrendingDown, Check, LocateFixed, Loader2, X } from 'lucide-react';
+import { Search, SlidersHorizontal, ChevronUp, Check, LocateFixed, Loader2, X } from 'lucide-react';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { FuelChips } from '@/components/fuel-chips';
 import { BottomNav } from '@/components/bottom-nav';
@@ -407,12 +407,6 @@ export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
                   {price && (
                     <div className="text-right">
                       <p className="text-lg font-bold text-emerald-600">{price.price} ֏</p>
-                      {price.trend < 0 && (
-                        <div className="flex items-center gap-1 text-emerald-600">
-                          <TrendingDown className="w-3 h-3" />
-                          <span className="text-xs font-medium">↓ {Math.abs(price.trend)} ֏</span>
-                        </div>
-                      )}
                     </div>
                   )}
                 </button>

@@ -62,7 +62,7 @@ export function StationsProvider({ children }: { children: ReactNode }) {
     supabase
       .from('stations')
       .select(
-        'id, name, brand, brand_color, address, address_hy, lat, lng, rating, reviews_count, hours, station_prices(fuel_type, label, price, trend, updated_at)'
+        'id, name, brand, brand_color, address, address_hy, lat, lng, rating, reviews_count, station_prices(fuel_type, label, price, updated_at)'
       )
       .then(({ data, error: err }) => {
         if (cancelled) return;
@@ -89,12 +89,10 @@ export function StationsProvider({ children }: { children: ReactNode }) {
             type: p.fuel_type,
             label: p.label,
             price: p.price,
-            trend: p.trend ?? 0,
             // Recomputed below in the locale-aware memo.
             updatedAgo: '',
             updatedAt: p.updated_at,
           })),
-          hours: s.hours ?? [],
         }));
         setRawStations(mapped);
         setLoading(false);

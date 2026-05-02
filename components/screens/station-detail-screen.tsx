@@ -1,14 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowLeft, Share2, Navigation, MessageSquare, TrendingDown, TrendingUp, ChevronRight, X, Star } from 'lucide-react';
+import { ArrowLeft, Share2, Navigation, MessageSquare, ChevronRight, X, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BottomNav } from '@/components/bottom-nav';
 import { ReviewsBlock } from '@/components/reviews-block';
 import { type Station } from '@/lib/data';
 import { useT } from '@/lib/locale-store';
 import type { TranslationKey } from '@/lib/i18n';
-import { cn } from '@/lib/utils';
 
 interface StationDetailScreenProps {
   station: Station;
@@ -118,24 +117,7 @@ export function StationDetailScreen({ station, onBack, onNavigate }: StationDeta
                   <span className="text-2xl font-bold text-emerald-600">{price.price}</span>
                   <span className="text-sm text-slate-500">֏</span>
                 </div>
-                <div className="flex items-center justify-between mt-1">
-                  <span className="text-xs text-slate-400">{price.updatedAgo}</span>
-                  {price.trend !== 0 && (
-                    <div
-                      className={cn(
-                        'flex items-center gap-0.5 text-xs font-medium',
-                        price.trend < 0 ? 'text-emerald-600' : 'text-red-500'
-                      )}
-                    >
-                      {price.trend < 0 ? (
-                        <TrendingDown className="w-3 h-3" />
-                      ) : (
-                        <TrendingUp className="w-3 h-3" />
-                      )}
-                      {price.trend > 0 ? '+' : ''}{price.trend} ֏
-                    </div>
-                  )}
-                </div>
+                <span className="text-xs text-slate-400 block mt-1">{price.updatedAgo}</span>
               </div>
             ))}
           </div>

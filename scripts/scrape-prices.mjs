@@ -146,7 +146,6 @@ function buildUpsertRows(stationIds, prices) {
       fuel_type: p.id,
       label: p.label,
       price: p.price,
-      trend: 0,
       updated_at: now,
     }))
   );

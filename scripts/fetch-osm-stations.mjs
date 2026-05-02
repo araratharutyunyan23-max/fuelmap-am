@@ -91,29 +91,6 @@ function pickAddress(tags) {
   return 'Адрес не указан';
 }
 
-function seededRandom(seed) {
-  let h = 2166136261;
-  for (let i = 0; i < seed.length; i++) {
-    h ^= seed.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return () => {
-    h = Math.imul(h ^ (h >>> 15), 2246822507);
-    h = Math.imul(h ^ (h >>> 13), 3266489909);
-    return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
-  };
-}
-
-const DEFAULT_HOURS = [
-  { day: 'Пн', time: '06:00 – 23:00' },
-  { day: 'Вт', time: '06:00 – 23:00' },
-  { day: 'Ср', time: '06:00 – 23:00', isToday: true },
-  { day: 'Чт', time: '06:00 – 23:00' },
-  { day: 'Пт', time: '06:00 – 23:00' },
-  { day: 'Сб', time: '07:00 – 22:00' },
-  { day: 'Вс', time: '08:00 – 21:00' },
-];
-
 const YEREVAN_CENTER = { lat: 40.1872, lng: 44.5152 };
 
 function haversineKm(a, b) {
@@ -152,7 +129,6 @@ async function main() {
     const tags = el.tags || {};
     const brand = normalizeBrand(tags);
     const name = pickName(tags, brand.name);
-    const ratingRng = seededRandom(id + ':r');
     return {
       id,
       name,
@@ -162,12 +138,12 @@ async function main() {
       lat,
       lng,
       distance: haversineKm({ lat, lng }, YEREVAN_CENTER),
-      // rating + reviews are still placeholder seed values until we wire reviews.
-      rating: Math.round((3.8 + ratingRng() * 1.2) * 10) / 10,
-      reviews: Math.floor(20 + ratingRng() * 400),
+      // rating + reviews_count are populated by the station_reviews trigger
+      // once real users post — start at 0 so we never ship fake numbers.
+      rating: 0,
+      reviews: 0,
       // Prices come from scripts/scrape-prices.mjs, not OSM.
       prices: [],
-      hours: DEFAULT_HOURS,
     };
   }).filter((s) => s && (keepOther || s.brand !== 'Other'));
 
