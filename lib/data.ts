@@ -27,7 +27,6 @@ export const FUEL_TYPES = [
   { id: '98', label: '98' },
   { id: 'diesel', label: 'Дизель' },
   { id: 'lpg', label: 'LPG' },
-  { id: 'cng', label: 'CNG' },
 ];
 
 // Stations live in Supabase. Use `useStations()` from './stations-store' instead.
