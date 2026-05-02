@@ -322,13 +322,18 @@ export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
         )}
       </div>
 
-      {/* Bottom Sheet */}
+      {/* Bottom Sheet — sits flush against the nav. Extends behind it (the
+          nav's opaque white covers the lower 4rem+safe-area), so any rounding
+          mismatch between the sheet's `bottom` and the nav's height can't open
+          a hairline gap. z-40 keeps it below the nav (z-50). */}
       <div
-        className={cn(
-          'absolute left-0 right-0 bg-white rounded-t-2xl shadow-lg border-t border-slate-200 transition-all duration-300 z-[1000]',
-          sheetExpanded ? 'h-[60%]' : 'h-[240px]'
-        )}
-        style={{ bottom: 'calc(4rem + env(safe-area-inset-bottom))' }}
+        className="absolute left-0 right-0 bottom-0 bg-white rounded-t-2xl shadow-lg border-t border-slate-200 transition-all duration-300 z-40"
+        style={{
+          height: sheetExpanded
+            ? 'calc(60% + 4rem + env(safe-area-inset-bottom))'
+            : 'calc(240px + 4rem + env(safe-area-inset-bottom))',
+          paddingBottom: 'calc(4rem + env(safe-area-inset-bottom))',
+        }}
       >
         {/* Handle */}
         <button
