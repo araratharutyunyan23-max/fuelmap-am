@@ -138,17 +138,30 @@ async function scrapeGPPPrices() {
 
 // ---------------------------------------------------------------------------
 
-function buildUpsertRows(stationIds, prices) {
+// `trend` is the delta vs the previous DIFFERENT price — we want
+// "↓ 5 ֏" to stay visible until the next change, not reset to 0 the
+// next morning. So:
+//   * new station / first scrape → trend = 0
+//   * price unchanged             → keep the previous trend
+//   * price changed               → trend = newPrice - oldPrice
+function buildUpsertRows(stationIds, prices, oldByKey) {
   const now = new Date().toISOString();
   return stationIds.flatMap((stationId) =>
-    prices.map((p) => ({
-      station_id: stationId,
-      fuel_type: p.id,
-      label: p.label,
-      price: p.price,
-      trend: 0,
-      updated_at: now,
-    }))
+    prices.map((p) => {
+      const old = oldByKey.get(`${stationId}|${p.id}`);
+      let trend = 0;
+      if (old) {
+        trend = p.price === old.price ? (old.trend ?? 0) : p.price - old.price;
+      }
+      return {
+        station_id: stationId,
+        fuel_type: p.id,
+        label: p.label,
+        price: p.price,
+        trend,
+        updated_at: now,
+      };
+    })
   );
 }
 
@@ -176,7 +189,7 @@ async function fetchAllPrices() {
   for (;;) {
     const { data, error } = await supabase
       .from('station_prices')
-      .select('station_id, fuel_type, price')
+      .select('station_id, fuel_type, price, trend')
       .range(from, from + PAGE - 1);
     if (error) throw error;
     all.push(...data);
@@ -205,13 +218,13 @@ function summarizeChanges(oldByKey, newRows, brandByStation) {
     const brand = brandByStation.get(r.station_id);
     if (!brand) continue;
     const key = `${r.station_id}|${r.fuel_type}`;
-    const oldP = oldByKey.get(key);
-    if (oldP === undefined) continue; // new row, skip
-    if (oldP === r.price) continue;   // unchanged
+    const old = oldByKey.get(key);
+    if (old === undefined) continue;     // new row, skip
+    if (old.price === r.price) continue; // unchanged
 
     const groupKey = `${brand}|${r.fuel_type}`;
     if (!groups.has(groupKey)) groups.set(groupKey, []);
-    groups.get(groupKey).push({ stationId: r.station_id, oldP, newP: r.price });
+    groups.get(groupKey).push({ stationId: r.station_id, oldP: old.price, newP: r.price });
   }
 
   const events = [];
@@ -308,11 +321,13 @@ async function main() {
   // changed and post a single summary to Telegram.
   console.log('  Reading existing prices for diff …');
   const oldPrices = await fetchAllPrices();
-  const oldByKey = new Map(oldPrices.map((p) => [`${p.station_id}|${p.fuel_type}`, p.price]));
+  const oldByKey = new Map(
+    oldPrices.map((p) => [`${p.station_id}|${p.fuel_type}`, { price: p.price, trend: p.trend }])
+  );
 
-  const flashRows  = buildUpsertRows(flashIds,  flashPrices);
-  const maxOilRows = buildUpsertRows(maxOilIds, maxOilPrices);
-  const otherRows  = buildUpsertRows(otherIds,  gppPrices);
+  const flashRows  = buildUpsertRows(flashIds,  flashPrices,  oldByKey);
+  const maxOilRows = buildUpsertRows(maxOilIds, maxOilPrices, oldByKey);
+  const otherRows  = buildUpsertRows(otherIds,  gppPrices,    oldByKey);
   const allRows = [...flashRows, ...maxOilRows, ...otherRows];
 
   console.log(`Upserting ${allRows.length} price rows ...`);
