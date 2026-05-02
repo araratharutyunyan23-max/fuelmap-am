@@ -100,6 +100,7 @@ export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
   const [showBrandFilter, setShowBrandFilter] = useState(false);
   const [showLocationError, setShowLocationError] = useState(false);
   const [selectedBrands, setSelectedBrands] = useState<Set<string>>(new Set());
+  const [searchQuery, setSearchQuery] = useState('');
   const filterRef = useRef<HTMLDivElement>(null);
   const allBrands = useMemo(() => computeAllBrands(stations), [stations]);
 
@@ -130,10 +131,18 @@ export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
     });
   };
 
-  const visibleStations = useMemo(
-    () => selectedBrands.size === 0 ? stations : stations.filter(s => selectedBrands.has(s.brand)),
-    [selectedBrands, stations]
-  );
+  const visibleStations = useMemo(() => {
+    let result = selectedBrands.size === 0 ? stations : stations.filter(s => selectedBrands.has(s.brand));
+    const q = searchQuery.trim().toLowerCase();
+    if (q) {
+      result = result.filter(s =>
+        s.name.toLowerCase().includes(q) ||
+        s.brand.toLowerCase().includes(q) ||
+        s.address.toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [selectedBrands, stations, searchQuery]);
 
   // Stations that actually have a price for the currently selected fuel.
   // The bottom-sheet list shows only these — empty rows are confusing UX.
@@ -160,9 +169,20 @@ export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t('map.searchPlaceholder')}
-              className="w-full pl-9 pr-4 py-2.5 bg-slate-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full pl-9 pr-9 py-2.5 bg-slate-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                aria-label="Clear search"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
           <div ref={filterRef} className="relative">
             <button
