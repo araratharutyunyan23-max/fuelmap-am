@@ -95,6 +95,21 @@ const dict = {
     'detail.routePicker.appleSub': 'iPhone / iPad',
     'detail.routePicker.hint': 'Откроется приложение, если установлено, иначе веб-версия.',
 
+    // ------- Reviews
+    'reviews.title': 'Отзывы',
+    'reviews.empty': 'Пока нет отзывов. Будьте первым!',
+    'reviews.leaveReview': 'Оставить отзыв',
+    'reviews.loginToReview': 'Войдите, чтобы оставить отзыв',
+    'reviews.yourReview': 'Ваш отзыв',
+    'reviews.yourRating': 'Ваша оценка',
+    'reviews.commentPlaceholder': 'Расскажите о заправке (необязательно)',
+    'reviews.submit': 'Опубликовать',
+    'reviews.edit': 'Редактировать',
+    'reviews.delete': 'Удалить',
+    'reviews.deleteConfirm': 'Удалить ваш отзыв?',
+    'reviews.errorRating': 'Поставьте оценку от 1 до 5',
+    'reviews.anonymous': 'Гость',
+
     // ------- Submit price
     'submit.title': 'Сообщить цену',
     'submit.authRequired': 'Чтобы отправить цену, нужно войти.',
@@ -258,6 +273,21 @@ const dict = {
     'detail.routePicker.apple': 'Apple Քարտեզներ',
     'detail.routePicker.appleSub': 'iPhone / iPad',
     'detail.routePicker.hint': 'Կբացվի հավելվածը, եթե տեղադրված է, հակառակ դեպքում՝ վեբ տարբերակը։',
+
+    // ------- Reviews
+    'reviews.title': 'Կարծիքներ',
+    'reviews.empty': 'Դեռ կարծիքներ չկան։ Եղիր առաջինը։',
+    'reviews.leaveReview': 'Թողնել կարծիք',
+    'reviews.loginToReview': 'Մուտք գործիր կարծիք թողնելու համար',
+    'reviews.yourReview': 'Քո կարծիքը',
+    'reviews.yourRating': 'Քո գնահատականը',
+    'reviews.commentPlaceholder': 'Պատմիր լցակայանի մասին (պարտադիր չէ)',
+    'reviews.submit': 'Հրապարակել',
+    'reviews.edit': 'Խմբագրել',
+    'reviews.delete': 'Ջնջել',
+    'reviews.deleteConfirm': 'Ջնջել քո կարծիքը։',
+    'reviews.errorRating': 'Տուր գնահատական 1-ից 5',
+    'reviews.anonymous': 'Հյուր',
 
     // ------- Submit price
     'submit.title': 'Հայտնել գինը',

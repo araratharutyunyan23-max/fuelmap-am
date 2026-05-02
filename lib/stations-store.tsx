@@ -83,7 +83,7 @@ export function StationsProvider({ children }: { children: ReactNode }) {
           // Distance is recomputed against the user's position below.
           // This default is only used if the user denies/never grants geolocation.
           distance: 0,
-          rating: Number(s.rating ?? 4.0),
+          rating: Number(s.rating ?? 0),
           reviews: s.reviews_count ?? 0,
           prices: (s.station_prices ?? []).map((p: any) => ({
             type: p.fuel_type,
