@@ -134,16 +134,17 @@ const dict = {
     'history.totalLiters': 'Всего литров',
     'history.litersSuffix': 'л',
 
-    // ------- Fuels
-    'fuel.92': '92',
-    'fuel.95': '95',
-    'fuel.98': '98',
-    'fuel.diesel': 'Дизель',
+    // ------- Fuels (same labels in every locale — these are the names
+    // printed on Armenian pump boards regardless of the UI language).
+    'fuel.92': 'Regular',
+    'fuel.95': 'Premium',
+    'fuel.98': 'Super',
+    'fuel.diesel': 'Diesel',
     'fuel.lpg': 'LPG',
     'fuel.cng': 'CNG',
-    'fuel.92.full': 'АИ-92',
-    'fuel.95.full': 'АИ-95',
-    'fuel.98.full': 'АИ-98',
+    'fuel.92.full': 'Regular',
+    'fuel.95.full': 'Premium',
+    'fuel.98.full': 'Super',
 
     // ------- Relative time
     'time.justNow': 'только что',
@@ -298,16 +299,17 @@ const dict = {
     'history.totalLiters': 'Ընդհանուր լիտր',
     'history.litersSuffix': 'լ',
 
-    // ------- Fuels
-    'fuel.92': '92',
-    'fuel.95': '95',
-    'fuel.98': '98',
-    'fuel.diesel': 'Դիզել',
+    // ------- Fuels (same labels in every locale — these are the names
+    // printed on Armenian pump boards regardless of the UI language).
+    'fuel.92': 'Regular',
+    'fuel.95': 'Premium',
+    'fuel.98': 'Super',
+    'fuel.diesel': 'Diesel',
     'fuel.lpg': 'LPG',
     'fuel.cng': 'CNG',
-    'fuel.92.full': 'Ա-92',
-    'fuel.95.full': 'Ա-95',
-    'fuel.98.full': 'Ա-98',
+    'fuel.92.full': 'Regular',
+    'fuel.95.full': 'Premium',
+    'fuel.98.full': 'Super',
 
     // ------- Relative time
     'time.justNow': 'հենց նոր',

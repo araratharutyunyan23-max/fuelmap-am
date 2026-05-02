@@ -8,7 +8,6 @@ import { ListScreen } from '@/components/screens/list-screen';
 import { CheapestScreen } from '@/components/screens/cheapest-screen';
 import { SubmitPriceScreen } from '@/components/screens/submit-price-screen';
 import { ProfileScreen } from '@/components/screens/profile-screen';
-import { SettingsScreen } from '@/components/screens/settings-screen';
 import { HistoryScreen } from '@/components/screens/history-screen';
 import { LoginScreen } from '@/components/screens/login-screen';
 import { RegisterScreen } from '@/components/screens/register-screen';
@@ -19,7 +18,7 @@ import { AuthProvider } from '@/lib/auth-store';
 import { UserLocationProvider } from '@/lib/user-location';
 import { LocaleProvider } from '@/lib/locale-store';
 
-type Screen = 'onboarding' | 'map' | 'list' | 'detail' | 'cheapest' | 'submit' | 'profile' | 'settings' | 'history' | 'login' | 'register' | 'admin';
+type Screen = 'onboarding' | 'map' | 'list' | 'detail' | 'cheapest' | 'submit' | 'profile' | 'history' | 'login' | 'register' | 'admin';
 
 export default function FuelMapApp() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('onboarding');
@@ -133,13 +132,6 @@ export default function FuelMapApp() {
 
       {currentScreen === 'profile' && (
         <ProfileScreen onNavigate={handleNavigate} />
-      )}
-
-      {currentScreen === 'settings' && (
-        <SettingsScreen
-          onBack={handleBack}
-          onNavigate={handleNavigate}
-        />
       )}
 
       {currentScreen === 'admin' && (

@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowLeft, Share2, Navigation, MessageSquare, Star, TrendingDown, TrendingUp, ChevronRight, X } from 'lucide-react';
+import { ArrowLeft, Share2, Navigation, MessageSquare, TrendingDown, TrendingUp, ChevronRight, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BottomNav } from '@/components/bottom-nav';
-import { type Station, reviews } from '@/lib/data';
+import { type Station } from '@/lib/data';
 import { useT } from '@/lib/locale-store';
+import type { TranslationKey } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 
 interface StationDetailScreenProps {
@@ -66,13 +67,6 @@ export function StationDetailScreen({ station, onBack, onNavigate }: StationDeta
         {/* Station Info Card */}
         <div className="bg-white rounded-2xl shadow-md p-4 mb-4">
           <h1 className="text-xl font-bold text-slate-900 mb-1">{station.name}</h1>
-          <div className="flex items-center gap-2 mb-2">
-            <div className="flex items-center gap-1">
-              <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-              <span className="font-medium text-slate-900">{station.rating}</span>
-            </div>
-            <span className="text-slate-400">({t('detail.reviews', { n: station.reviews })})</span>
-          </div>
           <p className="text-slate-500">{station.address} · {station.distance} {t('common.km')}</p>
 
           {/* Quick Actions */}
@@ -111,7 +105,7 @@ export function StationDetailScreen({ station, onBack, onNavigate }: StationDeta
                 key={price.type}
                 className="bg-slate-50 rounded-xl p-3"
               >
-                <p className="text-sm text-slate-500 mb-1">{price.label}</p>
+                <p className="text-sm text-slate-500 mb-1">{t(`fuel.${price.type}` as TranslationKey)}</p>
                 <div className="flex items-baseline gap-2">
                   <span className="text-2xl font-bold text-emerald-600">{price.price}</span>
                   <span className="text-sm text-slate-500">֏</span>
@@ -140,42 +134,6 @@ export function StationDetailScreen({ station, onBack, onNavigate }: StationDeta
           )}
         </div>
 
-        {/* Reviews */}
-        <div className="mb-4">
-          <h2 className="text-lg font-semibold text-slate-900 mb-3">Отзывы</h2>
-          <div className="space-y-3">
-            {reviews.map((review) => (
-              <div key={review.id} className="bg-slate-50 rounded-xl p-4">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 font-semibold">
-                    {review.avatar}
-                  </div>
-                  <div>
-                    <p className="font-medium text-slate-900">{review.name}</p>
-                    <div className="flex gap-0.5">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className={cn(
-                            'w-3 h-3',
-                            i < review.rating
-                              ? 'fill-amber-400 text-amber-400'
-                              : 'text-slate-300'
-                          )}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                <p className="text-sm text-slate-600">{review.text}</p>
-              </div>
-            ))}
-          </div>
-          <button className="flex items-center gap-1 mt-3 text-emerald-600 font-medium text-sm hover:text-emerald-700">
-            Все отзывы
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
       </div>
 
       <BottomNav active="map" onNavigate={onNavigate} />
