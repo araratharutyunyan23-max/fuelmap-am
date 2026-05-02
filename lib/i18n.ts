@@ -21,7 +21,7 @@ const dict = {
     // ------- Bottom nav
     'nav.map': 'Карта',
     'nav.list': 'Список',
-    'nav.history': 'История',
+    'nav.telegram': 'Telegram',
     'nav.profile': 'Профиль',
 
     // ------- Onboarding
@@ -143,12 +143,6 @@ const dict = {
     'profile.savedStations': 'Сохранённые АЗС',
     'profile.achievements': 'Достижения',
 
-    // ------- History
-    'history.title': 'История заправок',
-    'history.totalSpent': 'Всего потрачено',
-    'history.totalLiters': 'Всего литров',
-    'history.litersSuffix': 'л',
-
     // ------- Fuels (same labels in every locale — these are the names
     // printed on Armenian pump boards regardless of the UI language).
     'fuel.92': 'Regular',
@@ -200,7 +194,7 @@ const dict = {
     // ------- Bottom nav
     'nav.map': 'Քարտեզ',
     'nav.list': 'Ցուցակ',
-    'nav.history': 'Պատմություն',
+    'nav.telegram': 'Telegram',
     'nav.profile': 'Պրոֆիլ',
 
     // ------- Onboarding
@@ -321,12 +315,6 @@ const dict = {
     'profile.viewAll': 'Բոլորը',
     'profile.savedStations': 'Պահպանված ԲԿ-ներ',
     'profile.achievements': 'Նվաճումներ',
-
-    // ------- History
-    'history.title': 'Լցավորումների պատմություն',
-    'history.totalSpent': 'Ընդհանուր ծախսված',
-    'history.totalLiters': 'Ընդհանուր լիտր',
-    'history.litersSuffix': 'լ',
 
     // ------- Fuels (same labels in every locale — these are the names
     // printed on Armenian pump boards regardless of the UI language).
