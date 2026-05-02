@@ -152,6 +152,18 @@ const dict = {
     'time.days': '{n} дн назад',
     'time.longAgo': 'давно',
 
+    // ------- Admin
+    'admin.title': 'Модерация цен',
+    'admin.empty': 'Pending-репортов нет',
+    'admin.confirm': 'Подтвердить',
+    'admin.reject': 'Отклонить',
+    'admin.report.fuel': 'Топливо',
+    'admin.report.price': 'Цена',
+    'admin.report.user': 'От',
+    'admin.report.viewPhoto': 'Открыть фото',
+    'admin.notAdmin': 'Этот раздел доступен только админам.',
+    'profile.adminLink': 'Модерация цен',
+
     // ------- Generic errors / states
     'error.generic': 'Что-то пошло не так',
     'state.noStations': 'Нет заправок',
@@ -303,6 +315,18 @@ const dict = {
     'time.hours': '{n} ժ առաջ',
     'time.days': '{n} օր առաջ',
     'time.longAgo': 'վաղուց',
+
+    // ------- Admin
+    'admin.title': 'Գների մոդերացիա',
+    'admin.empty': 'Սպասող ռեպորտներ չկան',
+    'admin.confirm': 'Հաստատել',
+    'admin.reject': 'Մերժել',
+    'admin.report.fuel': 'Վառելիք',
+    'admin.report.price': 'Գին',
+    'admin.report.user': 'Ումից',
+    'admin.report.viewPhoto': 'Բացել լուսանկարը',
+    'admin.notAdmin': 'Այս բաժինը հասանելի է միայն ադմինների համար։',
+    'profile.adminLink': 'Գների մոդերացիա',
 
     // ------- Generic errors / states
     'error.generic': 'Ինչ-որ բան սխալ գնաց',

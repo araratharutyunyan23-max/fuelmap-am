@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { OnboardingScreen } from '@/components/screens/onboarding-screen';
 import { MapScreen } from '@/components/screens/map-screen';
 import { StationDetailScreen } from '@/components/screens/station-detail-screen';
@@ -12,18 +12,34 @@ import { SettingsScreen } from '@/components/screens/settings-screen';
 import { HistoryScreen } from '@/components/screens/history-screen';
 import { LoginScreen } from '@/components/screens/login-screen';
 import { RegisterScreen } from '@/components/screens/register-screen';
+import { AdminScreen } from '@/components/screens/admin-screen';
 import { type Station } from '@/lib/data';
 import { StationsProvider } from '@/lib/stations-store';
 import { AuthProvider } from '@/lib/auth-store';
 import { UserLocationProvider } from '@/lib/user-location';
 import { LocaleProvider } from '@/lib/locale-store';
 
-type Screen = 'onboarding' | 'map' | 'list' | 'detail' | 'cheapest' | 'submit' | 'profile' | 'settings' | 'history' | 'login' | 'register';
+type Screen = 'onboarding' | 'map' | 'list' | 'detail' | 'cheapest' | 'submit' | 'profile' | 'settings' | 'history' | 'login' | 'register' | 'admin';
 
 export default function FuelMapApp() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('onboarding');
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
   const [previousScreen, setPreviousScreen] = useState<Screen>('map');
+  const [highlightReportId, setHighlightReportId] = useState<string | null>(null);
+
+  // Deep link from Telegram: ?admin=<report_id> jumps straight into the
+  // admin screen with that report scrolled into view.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('admin');
+    if (id) {
+      setHighlightReportId(id);
+      setCurrentScreen('admin');
+      // Strip the param so a refresh doesn't keep re-routing.
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
 
   const handleNavigate = (screen: string) => {
     setPreviousScreen(currentScreen);
@@ -123,6 +139,13 @@ export default function FuelMapApp() {
         <SettingsScreen
           onBack={handleBack}
           onNavigate={handleNavigate}
+        />
+      )}
+
+      {currentScreen === 'admin' && (
+        <AdminScreen
+          onBack={() => setCurrentScreen('profile')}
+          highlightId={highlightReportId}
         />
       )}
     </StationsProvider>

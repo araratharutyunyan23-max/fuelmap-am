@@ -1,10 +1,12 @@
 'use client';
 
-import { User, ChevronRight, Lock, LogIn, LogOut } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { User, ChevronRight, Lock, LogIn, LogOut, ShieldCheck } from 'lucide-react';
 import { BottomNav } from '@/components/bottom-nav';
 import { userProfile } from '@/lib/data';
 import { useAuth } from '@/lib/auth-store';
 import { useT } from '@/lib/locale-store';
+import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 
 interface ProfileScreenProps {
@@ -18,6 +20,21 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
     (user?.user_metadata?.name as string | undefined) ||
     user?.email?.split('@')[0] ||
     'Guest';
+
+  const [isAdmin, setIsAdmin] = useState(false);
+  useEffect(() => {
+    if (!user) {
+      setIsAdmin(false);
+      return;
+    }
+    let cancelled = false;
+    supabase.rpc('is_admin').then(({ data }) => {
+      if (!cancelled) setIsAdmin(Boolean(data));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
@@ -57,6 +74,22 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
           )}
         </div>
       </div>
+
+      {/* Admin link — only for admins */}
+      {isAdmin && (
+        <div className="px-4 pt-4">
+          <button
+            onClick={() => onNavigate('admin')}
+            className="w-full bg-white rounded-xl shadow-sm p-4 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left"
+          >
+            <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+              <ShieldCheck className="w-5 h-5 text-emerald-600" />
+            </div>
+            <span className="flex-1 font-medium text-slate-900">{t('profile.adminLink')}</span>
+            <ChevronRight className="w-5 h-5 text-slate-400" />
+          </button>
+        </div>
+      )}
 
       {/* Stats Grid */}
       <div className="px-4 py-4">
