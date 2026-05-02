@@ -1,21 +1,34 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { ServiceWorkerRegister } from '@/components/sw-register'
 import './globals.css'
 
-const inter = Inter({ 
+const inter = Inter({
   subsets: ["latin", "cyrillic"],
   variable: '--font-inter'
 });
 
 export const metadata: Metadata = {
   title: 'FuelMap Armenia',
-  description: 'Все заправки Армении в одном приложении',
-  generator: 'v0.app',
+  description: 'Карта АЗС Армении с актуальными ценами на топливо',
+  applicationName: 'FuelMap Armenia',
   manifest: '/manifest.json',
   icons: {
-    icon: '/icon.svg',
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
     apple: '/apple-icon.png',
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'FuelMap',
+  },
+  formatDetection: {
+    telephone: false,
   },
 }
 
@@ -25,6 +38,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   themeColor: '#059669',
+  viewportFit: 'cover',
 }
 
 export default function RootLayout({
@@ -40,6 +54,7 @@ export default function RootLayout({
             {children}
           </div>
         </div>
+        <ServiceWorkerRegister />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
