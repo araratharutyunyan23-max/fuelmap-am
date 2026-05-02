@@ -152,7 +152,7 @@ export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
   const nearbyStations = sortedStations.slice(0, 3);
 
   return (
-    <div className="relative h-screen flex flex-col bg-slate-50">
+    <div className="relative h-dvh flex flex-col bg-slate-50">
       {/* Top Bar */}
       <div className="absolute top-0 left-0 right-0 z-[1000] bg-white/95 backdrop-blur-sm border-b border-slate-200 px-4 pt-3 pb-2">
         <div className="flex items-center gap-3 mb-3">
@@ -305,9 +305,10 @@ export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
       {/* Bottom Sheet */}
       <div
         className={cn(
-          'absolute bottom-16 left-0 right-0 bg-white rounded-t-2xl shadow-lg border-t border-slate-200 transition-all duration-300 z-[1000]',
+          'absolute left-0 right-0 bg-white rounded-t-2xl shadow-lg border-t border-slate-200 transition-all duration-300 z-[1000]',
           sheetExpanded ? 'h-[60%]' : 'h-[240px]'
         )}
+        style={{ bottom: 'calc(4rem + env(safe-area-inset-bottom))' }}
       >
         {/* Handle */}
         <button
