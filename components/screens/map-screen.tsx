@@ -257,7 +257,7 @@ export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
             requesting && 'opacity-70 cursor-wait',
             'hover:bg-slate-50'
           )}
-          style={{ bottom: 'calc(240px + 12px)' }}
+          style={{ bottom: 'calc(4rem + env(safe-area-inset-bottom) + 240px + 12px)' }}
         >
           {requesting ? (
             <Loader2 className="w-5 h-5 animate-spin" />
@@ -268,7 +268,7 @@ export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
 
         {showLocationError && locationError && (
           <div className="absolute right-4 left-4 z-[1100] flex items-start gap-2 bg-white shadow-lg border border-red-200 rounded-xl px-3 py-2 text-sm text-red-700"
-               style={{ bottom: 'calc(240px + 64px)' }}>
+               style={{ bottom: 'calc(4rem + env(safe-area-inset-bottom) + 240px + 64px)' }}>
             <span className="flex-1">{t(locationError as any)}</span>
             <button onClick={() => setShowLocationError(false)} className="text-red-400 hover:text-red-600">
               <X className="w-4 h-4" />
