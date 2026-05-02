@@ -135,7 +135,7 @@ export function SubmitPriceScreen({ onBack, onNavigate, initialStationId }: Subm
     setOcrCandidates([]);
   };
 
-  const fuelChips = FUEL_TYPES.filter((f) => ['92', '95', '98', 'diesel', 'lpg', 'cng'].includes(f.id));
+  const fuelChips = FUEL_TYPES.filter((f) => ['92', '95', '98', 'diesel', 'lpg'].includes(f.id));
 
   const selectedStation = useMemo(() => {
     if (stationId) return stations.find((s) => s.id === stationId) ?? null;
