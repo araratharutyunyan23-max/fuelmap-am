@@ -16,3 +16,6 @@ node_modules
 .DS_Store
 tsconfig.tsbuildinfo
 .claude/
+
+# Personal notes
+docs/
