@@ -18,6 +18,11 @@ const nextConfig = {
 export default withSentryConfig(nextConfig, {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
+  // EU region — sentry-cli defaults to sentry.io; with a German org we
+  // need to point it at de.sentry.io so source map upload hits the
+  // right ingest endpoint.
+  sentryUrl: process.env.SENTRY_URL,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
 
   // Don't talk to Sentry during the build if no auth token is set
   // (local builds without secrets, preview builds, etc.).
