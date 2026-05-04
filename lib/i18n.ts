@@ -150,6 +150,10 @@ const dict = {
     'profile.mySubmissions.pending': 'На пров.',
     'profile.mySubmissions.rejected': 'Отклон.',
     'profile.submitStation': 'Сообщить новую АЗС',
+    'profile.balance.title': 'Баланс',
+    'profile.balance.progress': 'Накопи ещё {remaining} ֏ для вывода',
+    'profile.balance.withdraw': 'Запросить вывод в Telegram',
+    'profile.balance.howEarned': '+20 ֏ за каждую подтверждённую цену · максимум 2,000 ֏/мес',
 
     // ------- Submit station
     'submitStation.title': 'Сообщить новую АЗС',
@@ -367,6 +371,10 @@ const dict = {
     'profile.mySubmissions.pending': 'Ստուգման',
     'profile.mySubmissions.rejected': 'Մերժ.',
     'profile.submitStation': 'Ավելացնել նոր ԲԿ',
+    'profile.balance.title': 'Հաշվեկշիռ',
+    'profile.balance.progress': 'Կուտակիր ևս {remaining} ֏ դուրսբերման համար',
+    'profile.balance.withdraw': 'Հայտ Telegram-ում',
+    'profile.balance.howEarned': '+20 ֏ յուրաքանչյուր հաստատված գնի համար · առավելագույնը 2,000 ֏/ամսում',
 
     // ------- Submit station
     'submitStation.title': 'Ավելացնել նոր ԲԿ',
