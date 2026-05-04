@@ -143,6 +143,11 @@ const dict = {
     'profile.achievements': 'Достижения',
     'profile.privacy': 'Политика конфиденциальности',
     'profile.terms': 'Условия использования',
+    'profile.mySubmissions.title': 'Мои отправки цен',
+    'profile.mySubmissions.empty': 'Вы ещё не отправляли цены. Сообщите цену со станции — поможете другим водителям.',
+    'profile.mySubmissions.confirmed': 'Подтв.',
+    'profile.mySubmissions.pending': 'На пров.',
+    'profile.mySubmissions.rejected': 'Отклон.',
 
     // ------- Fuels (same labels in every locale — these are the names
     // printed on Armenian pump boards regardless of the UI language).
@@ -317,6 +322,11 @@ const dict = {
     'profile.achievements': 'Նվաճումներ',
     'profile.privacy': 'Գաղտնիության քաղաքականություն',
     'profile.terms': 'Օգտագործման պայմաններ',
+    'profile.mySubmissions.title': 'Իմ ուղարկած գները',
+    'profile.mySubmissions.empty': 'Դու դեռ գին չես ուղարկել։ Հայտնիր լցակայանից գինը — կօգնես այլ վարորդների։',
+    'profile.mySubmissions.confirmed': 'Հաստ.',
+    'profile.mySubmissions.pending': 'Ստուգման',
+    'profile.mySubmissions.rejected': 'Մերժ.',
 
     // ------- Fuels (same labels in every locale — these are the names
     // printed on Armenian pump boards regardless of the UI language).
