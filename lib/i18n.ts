@@ -181,6 +181,10 @@ const dict = {
     'favorites.section.title': 'Любимые АЗС',
     'map.favorites.showOnly': 'Показать только избранные',
     'map.favorites.showAll': 'Показать все станции',
+    'pushPrompt.title': 'Узнавай о ценах первым',
+    'pushPrompt.body': 'Пришлём пуш как только цена на твоей любимой АЗС упадёт. Можно выключить в любой момент в профиле.',
+    'pushPrompt.enable': 'Включить уведомления',
+    'pushPrompt.notNow': 'Не сейчас',
 
     // ------- Fuels (same labels in every locale — these are the names
     // printed on Armenian pump boards regardless of the UI language).
@@ -393,6 +397,10 @@ const dict = {
     'favorites.section.title': 'Սիրելի ԲԿ-ներ',
     'map.favorites.showOnly': 'Ցույց տալ միայն ընտրյալները',
     'map.favorites.showAll': 'Ցույց տալ բոլորը',
+    'pushPrompt.title': 'Իմացիր գների մասին առաջինը',
+    'pushPrompt.body': 'Կուղարկենք push, հենց որ գինը ընկնի քո սիրելի լցակայանում։ Կարող ես անջատել ցանկացած պահի պրոֆիլում։',
+    'pushPrompt.enable': 'Միացնել ծանուցումները',
+    'pushPrompt.notNow': 'Ոչ հիմա',
 
     // ------- Fuels (same labels in every locale — these are the names
     // printed on Armenian pump boards regardless of the UI language).
