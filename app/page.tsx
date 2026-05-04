@@ -20,6 +20,7 @@ import { UserLocationProvider } from '@/lib/user-location';
 import { LocaleProvider } from '@/lib/locale-store';
 import { FavoritesProvider } from '@/lib/favorites-store';
 import { AnalyticsProvider } from '@/components/analytics-provider';
+import { LanguagePickerModal } from '@/components/language-picker-modal';
 import { PushPermissionPrompt } from '@/components/push-permission-prompt';
 
 type Screen = 'onboarding' | 'map' | 'list' | 'detail' | 'cheapest' | 'submit' | 'submit-station' | 'profile' | 'login' | 'register' | 'admin';
@@ -192,6 +193,7 @@ export default function FuelMapApp() {
     <LocaleProvider>
       <AuthProvider>
         <AnalyticsProvider>
+          <LanguagePickerModal />
           <AppShell />
         </AnalyticsProvider>
       </AuthProvider>
