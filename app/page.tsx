@@ -18,6 +18,12 @@ import { StationsProvider } from '@/lib/stations-store';
 import { AuthProvider, useAuth } from '@/lib/auth-store';
 import { UserLocationProvider } from '@/lib/user-location';
 import { LocaleProvider } from '@/lib/locale-store';
+import {
+  isPushSupported,
+  isStandaloneDisplay,
+  pushPermission,
+  subscribeToPush,
+} from '@/lib/push';
 
 type Screen = 'onboarding' | 'map' | 'list' | 'detail' | 'cheapest' | 'submit' | 'submit-station' | 'profile' | 'login' | 'register' | 'admin';
 
@@ -68,6 +74,23 @@ function AppShell() {
       if (prev !== null) return prev; // already routed (e.g. by ?admin=)
       return user ? 'map' : 'onboarding';
     });
+  }, [authLoading, user]);
+
+  // Ask for push permission once per device, right after login. We only
+  // attempt when the app is installed (iOS exposes Notification only to
+  // standalone PWAs; in a regular Safari tab calling requestPermission()
+  // either no-ops or throws). The localStorage flag means we don't poke
+  // the user again if they've already accepted/denied once — they can
+  // re-toggle from profile.
+  useEffect(() => {
+    if (authLoading || !user) return;
+    if (typeof window === 'undefined') return;
+    if (!isPushSupported() || !isStandaloneDisplay()) return;
+    if (pushPermission() !== 'default') return; // already granted or denied
+    if (localStorage.getItem('push_prompt_v1') === 'asked') return;
+    localStorage.setItem('push_prompt_v1', 'asked');
+    // Don't await — if the user denies, we just move on silently.
+    subscribeToPush();
   }, [authLoading, user]);
 
   const handleNavigate = (screen: string) => {
