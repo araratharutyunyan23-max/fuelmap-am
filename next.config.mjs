@@ -1,3 +1,5 @@
+import { withSentryConfig } from '@sentry/nextjs';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   typescript: {
@@ -11,4 +13,20 @@ const nextConfig = {
   allowedDevOrigins: ['*.trycloudflare.com', '*.ngrok-free.app', '*.ngrok.io'],
 }
 
-export default nextConfig
+// Sentry wrapper. Source map upload + tunnel route are auto-configured;
+// we only talk to Sentry during the build when SENTRY_AUTH_TOKEN is set.
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+
+  // Don't talk to Sentry during the build if no auth token is set
+  // (local builds without secrets, preview builds, etc.).
+  silent: !process.env.SENTRY_AUTH_TOKEN,
+
+  // Avoid ad-blocker problems by routing /monitoring/* through our domain
+  // back to Sentry. Avoids false-positive blocks of `*.ingest.sentry.io`.
+  tunnelRoute: '/monitoring',
+
+  hideSourceMaps: true,
+  disableLogger: true,
+});
