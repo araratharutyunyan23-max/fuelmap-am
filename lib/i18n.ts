@@ -148,6 +148,29 @@ const dict = {
     'profile.mySubmissions.confirmed': 'Подтв.',
     'profile.mySubmissions.pending': 'На пров.',
     'profile.mySubmissions.rejected': 'Отклон.',
+    'profile.submitStation': 'Сообщить новую АЗС',
+
+    // ------- Submit station
+    'submitStation.title': 'Сообщить новую АЗС',
+    'submitStation.authRequired': 'Чтобы добавить АЗС, нужно войти.',
+    'submitStation.brand.label': 'Бренд',
+    'submitStation.brand.other': 'Другой',
+    'submitStation.name.label': 'Название (необязательно)',
+    'submitStation.name.placeholder': 'Например: CPS Tigran Mets',
+    'submitStation.location.label': 'Местоположение',
+    'submitStation.location.empty': 'Координаты не выбраны',
+    'submitStation.location.useMine': 'Я сейчас здесь',
+    'submitStation.location.pickMap': 'Выбрать на карте',
+    'submitStation.address.placeholder': 'Адрес (можно поправить)',
+    'submitStation.photo.label': 'Фото (необязательно)',
+    'submitStation.photo.shoot': 'Сфотографируйте АЗС',
+    'submitStation.photo.uploadFailed': 'Не удалось загрузить фото',
+    'submitStation.cta.submit': 'Отправить заявку',
+    'submitStation.success': 'Спасибо! Заявка на проверке. Получите email когда подтвердим.',
+    'submitStation.mapPicker.title': 'Передвиньте карту так, чтобы метка была на АЗС',
+    'submitStation.mapPicker.confirm': 'Подтвердить координаты',
+    'admin.tab.prices': 'Цены',
+    'admin.tab.stations': 'Станции',
 
     // ------- Fuels (same labels in every locale — these are the names
     // printed on Armenian pump boards regardless of the UI language).
@@ -327,6 +350,29 @@ const dict = {
     'profile.mySubmissions.confirmed': 'Հաստ.',
     'profile.mySubmissions.pending': 'Ստուգման',
     'profile.mySubmissions.rejected': 'Մերժ.',
+    'profile.submitStation': 'Ավելացնել նոր ԲԿ',
+
+    // ------- Submit station
+    'submitStation.title': 'Ավելացնել նոր ԲԿ',
+    'submitStation.authRequired': 'Բենզակայան ավելացնելու համար մուտք գործիր։',
+    'submitStation.brand.label': 'Բրենդ',
+    'submitStation.brand.other': 'Այլ',
+    'submitStation.name.label': 'Անվանում (պարտադիր չէ)',
+    'submitStation.name.placeholder': 'Օրինակ՝ CPS Tigran Mets',
+    'submitStation.location.label': 'Գտնվելու վայր',
+    'submitStation.location.empty': 'Կոորդինատներ չեն ընտրված',
+    'submitStation.location.useMine': 'Ես հիմա այստեղ եմ',
+    'submitStation.location.pickMap': 'Ընտրել քարտեզում',
+    'submitStation.address.placeholder': 'Հասցե (կարելի է խմբագրել)',
+    'submitStation.photo.label': 'Լուսանկար (պարտադիր չէ)',
+    'submitStation.photo.shoot': 'Լուսանկարիր ԲԿ-ն',
+    'submitStation.photo.uploadFailed': 'Չհաջողվեց վերբեռնել',
+    'submitStation.cta.submit': 'Ուղարկել հայտը',
+    'submitStation.success': 'Շնորհակալություն! Հայտը ստուգման է։ Հաստատման մասին նամակ կստանաս։',
+    'submitStation.mapPicker.title': 'Տեղափոխիր քարտեզն այնպես, որ նշանը լինի ԲԿ-ի վրա',
+    'submitStation.mapPicker.confirm': 'Հաստատել կոորդինատները',
+    'admin.tab.prices': 'Գներ',
+    'admin.tab.stations': 'ԲԿ-ներ',
 
     // ------- Fuels (same labels in every locale — these are the names
     // printed on Armenian pump boards regardless of the UI language).

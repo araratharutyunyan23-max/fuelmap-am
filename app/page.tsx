@@ -8,6 +8,7 @@ import { StationDetailScreen } from '@/components/screens/station-detail-screen'
 import { ListScreen } from '@/components/screens/list-screen';
 import { CheapestScreen } from '@/components/screens/cheapest-screen';
 import { SubmitPriceScreen } from '@/components/screens/submit-price-screen';
+import { SubmitStationScreen } from '@/components/screens/submit-station-screen';
 import { ProfileScreen } from '@/components/screens/profile-screen';
 import { LoginScreen } from '@/components/screens/login-screen';
 import { RegisterScreen } from '@/components/screens/register-screen';
@@ -18,7 +19,7 @@ import { AuthProvider, useAuth } from '@/lib/auth-store';
 import { UserLocationProvider } from '@/lib/user-location';
 import { LocaleProvider } from '@/lib/locale-store';
 
-type Screen = 'onboarding' | 'map' | 'list' | 'detail' | 'cheapest' | 'submit' | 'profile' | 'login' | 'register' | 'admin';
+type Screen = 'onboarding' | 'map' | 'list' | 'detail' | 'cheapest' | 'submit' | 'submit-station' | 'profile' | 'login' | 'register' | 'admin';
 
 function SplashScreen() {
   return (
@@ -154,6 +155,13 @@ function AppShell() {
             onBack={handleBack}
             onNavigate={handleNavigate}
             initialStationId={previousScreen === 'detail' ? selectedStation?.id ?? null : null}
+          />
+        )}
+
+        {currentScreen === 'submit-station' && (
+          <SubmitStationScreen
+            onBack={handleBack}
+            onNavigate={handleNavigate}
           />
         )}
 
