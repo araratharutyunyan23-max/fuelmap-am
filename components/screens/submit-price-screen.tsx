@@ -105,9 +105,15 @@ export function SubmitPriceScreen({ onBack, onNavigate, initialStationId }: Subm
       // Fire OCR in the background — non-blocking, failures are silent.
       setOcrLoading(true);
       try {
+        const session = (await supabase.auth.getSession()).data.session;
         const r = await fetch('/api/ocr-price', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(session?.access_token
+              ? { Authorization: `Bearer ${session.access_token}` }
+              : {}),
+          },
           body: JSON.stringify({ photoUrl: pub.publicUrl }),
         });
         const data = await r.json();
@@ -172,8 +178,9 @@ export function SubmitPriceScreen({ onBack, onNavigate, initialStationId }: Subm
     });
     if (err) {
       setSubmitState('idle');
-      setError(err.message);
-      track('price_report_failed', { reason: err.message });
+      const isRateLimit = err.message?.includes('rate_limit');
+      setError(isRateLimit ? t('common.rateLimited') : err.message);
+      track('price_report_failed', { reason: err.message, rate_limited: isRateLimit });
       return;
     }
     setSubmitState('sent');

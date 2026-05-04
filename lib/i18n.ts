@@ -7,6 +7,7 @@ export type Locale = 'ru' | 'hy';
 const dict = {
   ru: {
     // ------- Common
+    'common.rateLimited': 'Слишком много отправок. Попробуй через минуту.',
     'common.back': 'Назад',
     'common.cancel': 'Отмена',
     'common.save': 'Сохранить',
@@ -223,6 +224,7 @@ const dict = {
 
   hy: {
     // ------- Common
+    'common.rateLimited': 'Շատ արագ ուղարկեցիր։ Փորձիր մեկ րոպեից։',
     'common.back': 'Հետ',
     'common.cancel': 'Չեղարկել',
     'common.save': 'Պահպանել',

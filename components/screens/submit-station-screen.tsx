@@ -203,8 +203,9 @@ export function SubmitStationScreen({ onBack, onNavigate }: SubmitStationScreenP
     });
     if (err) {
       setSubmitState('idle');
-      setError(err.message);
-      track('station_submission_failed', { reason: err.message });
+      const isRateLimit = err.message?.includes('rate_limit');
+      setError(isRateLimit ? t('common.rateLimited') : err.message);
+      track('station_submission_failed', { reason: err.message, rate_limited: isRateLimit });
       return;
     }
     track('station_submission_submitted', { brand, has_photo: !!photoUrl });

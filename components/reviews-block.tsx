@@ -68,7 +68,7 @@ export function ReviewsBlock({ stationId, onLoginRequired }: ReviewsBlockProps) 
     const { error } = await submit(rating, comment);
     setSubmitting(false);
     if (error) {
-      setError(error);
+      setError(error.includes('rate_limit') ? t('common.rateLimited') : error);
       return;
     }
     cancelEdit();
