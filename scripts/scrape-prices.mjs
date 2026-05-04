@@ -137,6 +137,32 @@ async function scrapeGPPPrices() {
 }
 
 // ---------------------------------------------------------------------------
+// Per-brand derived prices.
+//
+// Some brands don't publish 92 / 98 anywhere we can scrape, but their
+// prices follow a known fixed offset from the country-average 95
+// (Premium) that GPP gives us. We derive them here so the UI shows
+// real numbers instead of "Цены ещё не указаны".
+//
+// Add a brand here only after confirming a stable offset by walking
+// past their pumps (e.g. "CPS Premium 540, Regular 520, always −20").
+// ---------------------------------------------------------------------------
+
+const BRAND_PRICE_RULES = {
+  CPS: {
+    // Regular = Premium − 20 (confirmed by user 2026-05-03)
+    '92': (p95) => ({ id: '92', label: '92', price: p95 - 20 }),
+  },
+};
+
+function deriveBrandPrices(brand, gppPrices) {
+  const rules = BRAND_PRICE_RULES[brand];
+  if (!rules) return gppPrices;
+  const p95 = gppPrices.find((p) => p.id === '95')?.price;
+  if (p95 == null) return gppPrices;
+  const derived = Object.values(rules).map((fn) => fn(p95));
+  return [...gppPrices, ...derived];
+}
 
 // `trend` is the delta vs the previous DIFFERENT price — we want
 // "↓ 5 ֏" to stay visible until the next change, not reset to 0 the
@@ -312,10 +338,16 @@ async function main() {
 
   const flashIds  = allStations.filter((s) => s.brand === 'Flash').map((s) => s.id);
   const maxOilIds = allStations.filter((s) => s.brand === 'Max Oil').map((s) => s.id);
-  const otherIds  = allStations
-    .filter((s) => s.brand !== 'Flash' && s.brand !== 'Max Oil')
-    .map((s) => s.id);
-  console.log(`  Flash: ${flashIds.length} · Max Oil: ${maxOilIds.length} · others: ${otherIds.length}`);
+  // Group remaining stations by brand so we can apply per-brand derived
+  // prices (see BRAND_PRICE_RULES above).
+  const otherIdsByBrand = new Map();
+  for (const s of allStations) {
+    if (s.brand === 'Flash' || s.brand === 'Max Oil') continue;
+    if (!otherIdsByBrand.has(s.brand)) otherIdsByBrand.set(s.brand, []);
+    otherIdsByBrand.get(s.brand).push(s.id);
+  }
+  const otherTotal = [...otherIdsByBrand.values()].reduce((a, ids) => a + ids.length, 0);
+  console.log(`  Flash: ${flashIds.length} · Max Oil: ${maxOilIds.length} · others: ${otherTotal} (${otherIdsByBrand.size} brands)`);
 
   // Snapshot existing prices BEFORE the upsert so we can detect what
   // changed and post a single summary to Telegram.
@@ -327,7 +359,11 @@ async function main() {
 
   const flashRows  = buildUpsertRows(flashIds,  flashPrices,  oldByKey);
   const maxOilRows = buildUpsertRows(maxOilIds, maxOilPrices, oldByKey);
-  const otherRows  = buildUpsertRows(otherIds,  gppPrices,    oldByKey);
+  const otherRows = [];
+  for (const [brand, ids] of otherIdsByBrand) {
+    const brandPrices = deriveBrandPrices(brand, gppPrices);
+    otherRows.push(...buildUpsertRows(ids, brandPrices, oldByKey));
+  }
   const allRows = [...flashRows, ...maxOilRows, ...otherRows];
 
   console.log(`Upserting ${allRows.length} price rows ...`);
