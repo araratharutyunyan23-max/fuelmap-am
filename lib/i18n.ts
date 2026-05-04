@@ -129,7 +129,6 @@ const dict = {
     'submit.cta.submit': 'Подтвердить',
     'submit.cta.submitting': 'Отправляем…',
     'submit.success': 'Спасибо! Цена отправлена на проверку. После подтверждения она появится у всех.',
-    'submit.karmaHint': '+10 кармы за подтверждённую цену',
 
     // ------- Profile
     'profile.signOut': 'Выйти',
@@ -304,7 +303,6 @@ const dict = {
     'submit.cta.submit': 'Հաստատել',
     'submit.cta.submitting': 'Ուղարկում ենք…',
     'submit.success': 'Շնորհակալություն։ Գինը ուղարկվել է ստուգման։ Հաստատումից հետո կհայտնվի բոլորի մոտ։',
-    'submit.karmaHint': '+10 կարմա հաստատված գնի համար',
 
     // ------- Profile
     'profile.signOut': 'Ելք',

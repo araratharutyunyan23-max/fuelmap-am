@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useRef, useState } from 'react';
-import { ArrowLeft, Camera, Sparkles, Upload, Loader2, CheckCircle2, X } from 'lucide-react';
+import { ArrowLeft, Camera, Upload, Loader2, CheckCircle2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BottomNav } from '@/components/bottom-nav';
 import { FUEL_TYPES } from '@/lib/data';
@@ -415,12 +415,6 @@ export function SubmitPriceScreen({ onBack, onNavigate, initialStationId }: Subm
             )}
           </Button>
         )}
-
-        {/* Karma Hint */}
-        <div className="mt-6 flex items-center justify-center gap-2 text-sm text-slate-500">
-          <Sparkles className="w-4 h-4 text-amber-500" />
-          <span>{t('submit.karmaHint')}</span>
-        </div>
       </div>
 
       <BottomNav active="add" onNavigate={onNavigate} />
