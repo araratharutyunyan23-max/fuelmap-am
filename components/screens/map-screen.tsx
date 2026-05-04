@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { Search, SlidersHorizontal, ChevronUp, TrendingDown, Check, LocateFixed, Loader2, X } from 'lucide-react';
+import { Search, SlidersHorizontal, ChevronUp, TrendingDown, Check, LocateFixed, Loader2, X, Star } from 'lucide-react';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { FuelChips } from '@/components/fuel-chips';
 import { BottomNav } from '@/components/bottom-nav';
@@ -11,6 +11,7 @@ import { useStations } from '@/lib/stations-store';
 import { useUserLocation } from '@/lib/user-location';
 import { useT } from '@/lib/locale-store';
 import { getBrand } from '@/lib/brands';
+import { useFavorites } from '@/lib/favorites-store';
 import { cn } from '@/lib/utils';
 
 function computeAllBrands(stations: Station[]) {
@@ -101,8 +102,10 @@ export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
   const [showLocationError, setShowLocationError] = useState(false);
   const [selectedBrands, setSelectedBrands] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
+  const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
   const allBrands = useMemo(() => computeAllBrands(stations), [stations]);
+  const { favoriteIds } = useFavorites();
 
   useEffect(() => {
     if (locationError) setShowLocationError(true);
@@ -141,8 +144,11 @@ export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
         s.address.toLowerCase().includes(q)
       );
     }
+    if (showOnlyFavorites) {
+      result = result.filter(s => favoriteIds.has(s.id));
+    }
     return result;
-  }, [selectedBrands, stations, searchQuery]);
+  }, [selectedBrands, stations, searchQuery, showOnlyFavorites, favoriteIds]);
 
   // Stations that actually have a price for the currently selected fuel.
   // The bottom-sheet list shows only these — empty rows are confusing UX.
@@ -184,6 +190,25 @@ export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
               </button>
             )}
           </div>
+          {favoriteIds.size > 0 && (
+            <button
+              onClick={() => setShowOnlyFavorites(v => !v)}
+              aria-label={t(showOnlyFavorites ? 'map.favorites.showAll' : 'map.favorites.showOnly')}
+              className={cn(
+                'p-2.5 rounded-lg transition-colors',
+                showOnlyFavorites
+                  ? 'bg-amber-400 hover:bg-amber-500 text-white'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+              )}
+            >
+              <Star
+                className={cn(
+                  'w-5 h-5',
+                  showOnlyFavorites && 'fill-white'
+                )}
+              />
+            </button>
+          )}
           <div ref={filterRef} className="relative">
             <button
               onClick={() => setShowBrandFilter(v => !v)}

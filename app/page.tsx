@@ -18,6 +18,7 @@ import { StationsProvider } from '@/lib/stations-store';
 import { AuthProvider, useAuth } from '@/lib/auth-store';
 import { UserLocationProvider } from '@/lib/user-location';
 import { LocaleProvider } from '@/lib/locale-store';
+import { FavoritesProvider } from '@/lib/favorites-store';
 import {
   isPushSupported,
   isStandaloneDisplay,
@@ -118,7 +119,8 @@ function AppShell() {
 
   return (
     <UserLocationProvider>
-      <StationsProvider>
+      <FavoritesProvider>
+        <StationsProvider>
         {currentScreen === 'onboarding' && (
           <OnboardingScreen
             onLogin={() => handleNavigate('login')}
@@ -189,7 +191,7 @@ function AppShell() {
         )}
 
         {currentScreen === 'profile' && (
-          <ProfileScreen onNavigate={handleNavigate} />
+          <ProfileScreen onNavigate={handleNavigate} onStationSelect={handleStationSelect} />
         )}
 
         {currentScreen === 'admin' && (
@@ -198,7 +200,8 @@ function AppShell() {
             highlightId={highlightReportId}
           />
         )}
-      </StationsProvider>
+        </StationsProvider>
+      </FavoritesProvider>
     </UserLocationProvider>
   );
 }

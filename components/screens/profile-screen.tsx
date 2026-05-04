@@ -13,6 +13,7 @@ import {
   PlusCircle,
   Bell,
   BellOff,
+  Star,
 } from 'lucide-react';
 import {
   getCurrentSubscription,
@@ -23,6 +24,9 @@ import {
   subscribeToPush,
   unsubscribeFromPush,
 } from '@/lib/push';
+import { useFavorites } from '@/lib/favorites-store';
+import { useStations } from '@/lib/stations-store';
+import { type Station } from '@/lib/data';
 import { BottomNav } from '@/components/bottom-nav';
 import { useAuth } from '@/lib/auth-store';
 import { useT, useLocale } from '@/lib/locale-store';
@@ -32,6 +36,7 @@ import { cn } from '@/lib/utils';
 
 interface ProfileScreenProps {
   onNavigate: (screen: string) => void;
+  onStationSelect?: (station: Station) => void;
 }
 
 interface MyReport {
@@ -53,10 +58,12 @@ function formatDate(iso: string, locale: 'ru' | 'hy'): string {
   });
 }
 
-export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
+export function ProfileScreen({ onNavigate, onStationSelect }: ProfileScreenProps) {
   const t = useT();
   const { locale } = useLocale();
   const { user, signOut } = useAuth();
+  const { favoriteIds } = useFavorites();
+  const { stations } = useStations();
   const displayName =
     (user?.user_metadata?.name as string | undefined) ||
     user?.email?.split('@')[0] ||
@@ -109,6 +116,11 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
     const rejected = reports.filter((r) => r.status === 'rejected').length;
     return { total, confirmed, pending, rejected };
   }, [reports]);
+
+  const favoriteStations = useMemo(
+    () => stations.filter((s) => favoriteIds.has(s.id)),
+    [stations, favoriteIds]
+  );
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
@@ -254,6 +266,35 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
               </div>
             </>
           )}
+        </div>
+      )}
+
+      {/* Favorite stations */}
+      {user && favoriteStations.length > 0 && (
+        <div className="px-4 pt-6">
+          <h2 className="text-sm font-semibold text-slate-900 mb-3">
+            {t('favorites.section.title')}{' '}
+            <span className="font-normal text-slate-400">({favoriteStations.length})</span>
+          </h2>
+          <div className="bg-white rounded-xl shadow-sm divide-y divide-slate-100">
+            {favoriteStations.map((s) => (
+              <button
+                key={s.id}
+                onClick={() => onStationSelect?.(s)}
+                className="w-full flex items-center gap-3 p-3 hover:bg-slate-50 transition-colors text-left"
+              >
+                <div
+                  className="w-1 h-10 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: s.brandColor }}
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-slate-900 truncate">{s.name}</p>
+                  <p className="text-xs text-slate-500 truncate">{s.address}</p>
+                </div>
+                <Star className="w-4 h-4 fill-amber-400 text-amber-400 flex-shrink-0" />
+              </button>
+            ))}
+          </div>
         </div>
       )}
 

@@ -176,6 +176,11 @@ const dict = {
     'profile.notifications.off': 'Выключены — нажмите чтобы включить',
     'profile.notifications.blocked': 'Заблокированы. Включите в настройках браузера для fuelmap.app',
     'profile.notifications.iosInstallHint': 'Чтобы получать уведомления на iPhone, установите приложение: Поделиться → Добавить на главный экран',
+    'favorites.add': 'В избранное',
+    'favorites.remove': 'Убрать из избранного',
+    'favorites.section.title': 'Любимые АЗС',
+    'map.favorites.showOnly': 'Показать только избранные',
+    'map.favorites.showAll': 'Показать все станции',
 
     // ------- Fuels (same labels in every locale — these are the names
     // printed on Armenian pump boards regardless of the UI language).
@@ -383,6 +388,11 @@ const dict = {
     'profile.notifications.off': 'Անջատված են — սեղմիր միացնելու համար',
     'profile.notifications.blocked': 'Արգելափակված է։ Միացրու զննարկչի կարգավորումներում fuelmap.app-ի համար',
     'profile.notifications.iosInstallHint': 'iPhone-ում ծանուցումներ ստանալու համար տեղադրիր հավելվածը՝ Տարածել → Ավելացնել գլխավոր էկրանին',
+    'favorites.add': 'Ընտրյալներում',
+    'favorites.remove': 'Հանել ընտրյալներից',
+    'favorites.section.title': 'Սիրելի ԲԿ-ներ',
+    'map.favorites.showOnly': 'Ցույց տալ միայն ընտրյալները',
+    'map.favorites.showAll': 'Ցույց տալ բոլորը',
 
     // ------- Fuels (same labels in every locale — these are the names
     // printed on Armenian pump boards regardless of the UI language).
