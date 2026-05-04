@@ -1,9 +1,11 @@
 'use client';
 
-import { MapPin, TrendingDown, Bell, Droplets } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { MapPin, TrendingDown, Bell, Droplets, ArrowUpRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LanguageSwitcher } from '@/components/language-switcher';
-import { useT } from '@/lib/locale-store';
+import { useLocale, useT } from '@/lib/locale-store';
+import { installArticleUrl } from '@/lib/install-link';
 
 interface OnboardingScreenProps {
   onLogin: () => void;
@@ -13,6 +15,13 @@ interface OnboardingScreenProps {
 
 export function OnboardingScreen({ onLogin, onRegister, onGuest }: OnboardingScreenProps) {
   const t = useT();
+  const { locale } = useLocale();
+  // Computed on the client so navigator.userAgent works.
+  const [installUrl, setInstallUrl] = useState<string | null>(null);
+  useEffect(() => {
+    setInstallUrl(installArticleUrl(locale));
+  }, [locale]);
+
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <div className="flex justify-end p-4">
@@ -49,11 +58,24 @@ export function OnboardingScreen({ onLogin, onRegister, onGuest }: OnboardingScr
             <p className="text-slate-700 font-medium">{t('onboarding.feature.cheaper')}</p>
           </div>
 
-          <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl">
-            <div className="flex items-center justify-center w-12 h-12 bg-emerald-100 rounded-full">
+          <div className="flex items-start gap-4 p-4 bg-slate-50 rounded-xl">
+            <div className="flex items-center justify-center w-12 h-12 bg-emerald-100 rounded-full flex-shrink-0">
               <Bell className="w-6 h-6 text-emerald-600" />
             </div>
-            <p className="text-slate-700 font-medium">{t('onboarding.feature.alerts')}</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-slate-700 font-medium">{t('onboarding.feature.alerts')}</p>
+              {installUrl && (
+                <a
+                  href={installUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-1 inline-flex items-center gap-1 text-xs text-emerald-700 hover:text-emerald-800 font-medium"
+                >
+                  {t('onboarding.feature.alerts.installCta')}
+                  <ArrowUpRight className="w-3 h-3" />
+                </a>
+              )}
+            </div>
           </div>
         </div>
       </div>
