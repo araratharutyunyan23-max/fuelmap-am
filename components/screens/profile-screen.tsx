@@ -25,6 +25,8 @@ import {
   unsubscribeFromPush,
 } from '@/lib/push';
 import { useFavorites } from '@/lib/favorites-store';
+import { useBalance } from '@/lib/balance-store';
+import { Wallet, ArrowUpRight } from 'lucide-react';
 import { useStations } from '@/lib/stations-store';
 import { type Station } from '@/lib/data';
 import { BottomNav } from '@/components/bottom-nav';
@@ -64,6 +66,7 @@ export function ProfileScreen({ onNavigate, onStationSelect }: ProfileScreenProp
   const { user, signOut } = useAuth();
   const { favoriteIds } = useFavorites();
   const { stations } = useStations();
+  const { balance } = useBalance();
   const displayName =
     (user?.user_metadata?.name as string | undefined) ||
     user?.email?.split('@')[0] ||
@@ -155,6 +158,9 @@ export function ProfileScreen({ onNavigate, onStationSelect }: ProfileScreenProp
           )}
         </div>
       </div>
+
+      {/* Balance — show only for signed-in users */}
+      {user && <BalanceCard balance={balance.amount} />}
 
       {/* "Submit a new station" — for any signed-in user */}
       {user && (
@@ -312,6 +318,67 @@ export function ProfileScreen({ onNavigate, onStationSelect }: ProfileScreenProp
       </div>
 
       <BottomNav active="profile" onNavigate={onNavigate} />
+    </div>
+  );
+}
+
+// Reward balance card. Shows accumulated AMD, progress bar to the
+// withdrawal threshold, and either a "keep going" hint or a CTA that
+// opens our personal Telegram contact for manual payout.
+const WITHDRAWAL_THRESHOLD = 500;
+const WITHDRAWAL_TG = 'https://t.me/fuelmap_armenia';
+
+function BalanceCard({ balance }: { balance: number }) {
+  const t = useT();
+  const canWithdraw = balance >= WITHDRAWAL_THRESHOLD;
+  const remaining = Math.max(0, WITHDRAWAL_THRESHOLD - balance);
+  const progress = Math.min(100, Math.round((balance / WITHDRAWAL_THRESHOLD) * 100));
+
+  return (
+    <div className="px-4 pt-4">
+      <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/40 border border-emerald-200 rounded-xl p-4">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center flex-shrink-0">
+            <Wallet className="w-5 h-5 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-emerald-700 uppercase tracking-wide font-medium">
+              {t('profile.balance.title')}
+            </p>
+            <p className="text-2xl font-bold text-slate-900 leading-tight">
+              {balance.toLocaleString('ru-RU')} ֏
+            </p>
+          </div>
+        </div>
+
+        {!canWithdraw ? (
+          <>
+            <div className="h-2 bg-emerald-100 rounded-full overflow-hidden mb-2">
+              <div
+                className="h-full bg-emerald-500 transition-all"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <p className="text-xs text-slate-600">
+              {t('profile.balance.progress', { remaining: String(remaining) })}
+            </p>
+          </>
+        ) : (
+          <a
+            href={WITHDRAWAL_TG}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg py-2.5 px-4 flex items-center justify-center gap-2 text-sm font-semibold transition-colors"
+          >
+            {t('profile.balance.withdraw')}
+            <ArrowUpRight className="w-4 h-4" />
+          </a>
+        )}
+
+        <p className="text-[11px] text-slate-500 mt-3">
+          {t('profile.balance.howEarned')}
+        </p>
+      </div>
     </div>
   );
 }
