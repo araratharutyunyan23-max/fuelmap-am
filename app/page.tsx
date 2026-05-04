@@ -19,6 +19,7 @@ import { AuthProvider, useAuth } from '@/lib/auth-store';
 import { UserLocationProvider } from '@/lib/user-location';
 import { LocaleProvider } from '@/lib/locale-store';
 import { FavoritesProvider } from '@/lib/favorites-store';
+import { AnalyticsProvider } from '@/components/analytics-provider';
 import { PushPermissionPrompt } from '@/components/push-permission-prompt';
 
 type Screen = 'onboarding' | 'map' | 'list' | 'detail' | 'cheapest' | 'submit' | 'submit-station' | 'profile' | 'login' | 'register' | 'admin';
@@ -190,7 +191,9 @@ export default function FuelMapApp() {
   return (
     <LocaleProvider>
       <AuthProvider>
-        <AppShell />
+        <AnalyticsProvider>
+          <AppShell />
+        </AnalyticsProvider>
       </AuthProvider>
     </LocaleProvider>
   );

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ArrowLeft, Mail, Lock, MapPin, Droplets, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth-store';
+import { track } from '@/lib/analytics';
 import { useT } from '@/lib/locale-store';
 
 interface LoginScreenProps {
@@ -32,8 +33,10 @@ export function LoginScreen({ onBack, onSuccess, onGoToRegister }: LoginScreenPr
     setSubmitting(false);
     if (err) {
       setError(err === 'Invalid login credentials' ? t('login.invalidCredentials') : err);
+      track('login_failed', { reason: err });
       return;
     }
+    track('login_succeeded');
     onSuccess();
   };
 

@@ -7,6 +7,7 @@ import { BottomNav } from '@/components/bottom-nav';
 import { FUEL_TYPES } from '@/lib/data';
 import { useStations } from '@/lib/stations-store';
 import { useAuth } from '@/lib/auth-store';
+import { track } from '@/lib/analytics';
 import { useT } from '@/lib/locale-store';
 import type { TranslationKey } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
@@ -172,9 +173,15 @@ export function SubmitPriceScreen({ onBack, onNavigate, initialStationId }: Subm
     if (err) {
       setSubmitState('idle');
       setError(err.message);
+      track('price_report_failed', { reason: err.message });
       return;
     }
     setSubmitState('sent');
+    track('price_report_submitted', {
+      brand: selectedStation.brand,
+      fuel: fuel.id,
+      has_photo: !!photoUrl,
+    });
     setPrice('');
     removePhoto();
   };

@@ -15,6 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { BottomNav } from '@/components/bottom-nav';
 import { useAuth } from '@/lib/auth-store';
+import { track } from '@/lib/analytics';
 import { useUserLocation } from '@/lib/user-location';
 import { useT } from '@/lib/locale-store';
 import { BRANDS } from '@/lib/brands';
@@ -203,8 +204,10 @@ export function SubmitStationScreen({ onBack, onNavigate }: SubmitStationScreenP
     if (err) {
       setSubmitState('idle');
       setError(err.message);
+      track('station_submission_failed', { reason: err.message });
       return;
     }
+    track('station_submission_submitted', { brand, has_photo: !!photoUrl });
     setSubmitState('sent');
   };
 

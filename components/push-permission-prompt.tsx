@@ -11,6 +11,7 @@ import {
   subscribeToPush,
 } from '@/lib/push';
 import { useAuth } from '@/lib/auth-store';
+import { track } from '@/lib/analytics';
 
 const STORAGE_KEY = 'push_prompt_v1';
 
@@ -39,11 +40,16 @@ export function PushPermissionPrompt() {
   const dismiss = (mark: 'asked' | 'later') => {
     localStorage.setItem(STORAGE_KEY, mark);
     setShow(false);
+    if (mark === 'later') track('push_prompt_dismissed');
   };
 
   const enable = async () => {
     dismiss('asked');
-    await subscribeToPush();
+    track('push_prompt_accepted');
+    const result = await subscribeToPush();
+    track(result.ok ? 'push_subscribed' : 'push_subscribe_failed', {
+      reason: result.reason,
+    });
   };
 
   if (!show) return null;
