@@ -5,7 +5,7 @@ import { MapPin, TrendingDown, Bell, Droplets, ArrowUpRight } from 'lucide-react
 import { Button } from '@/components/ui/button';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { useLocale, useT } from '@/lib/locale-store';
-import { installArticleUrl } from '@/lib/install-link';
+import { installArticleUrl, isAppInstalled } from '@/lib/install-link';
 
 interface OnboardingScreenProps {
   onLogin: () => void;
@@ -16,9 +16,12 @@ interface OnboardingScreenProps {
 export function OnboardingScreen({ onLogin, onRegister, onGuest }: OnboardingScreenProps) {
   const t = useT();
   const { locale } = useLocale();
-  // Computed on the client so navigator.userAgent works.
+  // Computed on the client so navigator.userAgent + display-mode work.
+  // Hide the CTA when we're already running as an installed PWA — telling
+  // somebody who's already in the shell how to install it is noise.
   const [installUrl, setInstallUrl] = useState<string | null>(null);
   useEffect(() => {
+    if (isAppInstalled()) return;
     setInstallUrl(installArticleUrl(locale));
   }, [locale]);
 
