@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ArrowLeft, User, Mail, Lock, MapPin, Droplets, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth-store';
+import { track } from '@/lib/analytics';
 import { useT } from '@/lib/locale-store';
 
 interface RegisterScreenProps {
@@ -38,8 +39,10 @@ export function RegisterScreen({ onBack, onSuccess, onGoToLogin }: RegisterScree
     setSubmitting(false);
     if (err) {
       setError(err);
+      track('register_failed', { reason: err });
       return;
     }
+    track('register_succeeded');
     onSuccess();
   };
 

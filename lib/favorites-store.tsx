@@ -11,6 +11,7 @@ import {
 } from 'react';
 import { supabase } from './supabase';
 import { useAuth } from './auth-store';
+import { track } from './analytics';
 
 interface FavoritesContextValue {
   favoriteIds: Set<string>;
@@ -88,7 +89,9 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
           else next.delete(stationId);
           return next;
         });
+        return;
       }
+      track(wasFav ? 'favorite_removed' : 'favorite_added', { station_id: stationId });
     },
     [favoriteIds, user]
   );
