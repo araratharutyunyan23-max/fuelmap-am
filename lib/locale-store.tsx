@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from 'react';
 import { translate, type Locale, type TranslationKey } from './i18n';
+import { supabase } from './supabase';
 
 const STORAGE_KEY = 'fuelmap.locale';
 const DEFAULT_LOCALE: Locale = 'ru';
@@ -45,7 +46,25 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     if (typeof window !== 'undefined') {
       window.localStorage.setItem(STORAGE_KEY, next);
     }
+    // Sync to auth metadata so server-side push triggers can pick the
+    // right language. Best-effort: if the user is signed out the call
+    // 401s and we just keep the localStorage copy.
+    supabase.auth.updateUser({ data: { locale: next } }).catch(() => {});
   }, []);
+
+  // When auth state shows a user, push the current locale up so a fresh
+  // signup or signin from another device gets it associated immediately.
+  useEffect(() => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
+        const current = (session.user.user_metadata?.locale as Locale | undefined) ?? null;
+        if (current !== locale) {
+          supabase.auth.updateUser({ data: { locale } }).catch(() => {});
+        }
+      }
+    });
+    return () => sub.subscription.unsubscribe();
+  }, [locale]);
 
   const t = useCallback(
     (key: TranslationKey, params?: Record<string, string | number>) =>
