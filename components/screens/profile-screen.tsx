@@ -11,7 +11,18 @@ import {
   CheckCircle2,
   XCircle,
   PlusCircle,
+  Bell,
+  BellOff,
 } from 'lucide-react';
+import {
+  getCurrentSubscription,
+  isIOS,
+  isPushSupported,
+  isStandaloneDisplay,
+  pushPermission,
+  subscribeToPush,
+  unsubscribeFromPush,
+} from '@/lib/push';
 import { BottomNav } from '@/components/bottom-nav';
 import { useAuth } from '@/lib/auth-store';
 import { useT, useLocale } from '@/lib/locale-store';
@@ -149,6 +160,9 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
         </div>
       )}
 
+      {/* Push notifications toggle */}
+      {user && <PushToggle />}
+
       {/* Admin link — only for admins */}
       {isAdmin && (
         <div className="px-4 pt-4">
@@ -257,6 +271,116 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
       </div>
 
       <BottomNav active="profile" onNavigate={onNavigate} />
+    </div>
+  );
+}
+
+// Toggle for Web Push subscription. Three states:
+//   * supported + standalone + granted/subscribed → switch is on
+//   * supported + standalone + default/no-sub    → switch is off; tap to subscribe
+//   * supported + standalone + denied            → disabled, "включи в настройках"
+//   * not supported / not standalone (iOS in Safari tab) → install hint
+function PushToggle() {
+  const t = useT();
+  const [subscribed, setSubscribed] = useState<boolean | null>(null);
+  const [permission, setPermission] = useState<NotificationPermission | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [supported, setSupported] = useState<boolean | null>(null);
+  const [standalone, setStandalone] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    setSupported(isPushSupported());
+    setStandalone(isStandaloneDisplay());
+    setPermission(pushPermission());
+    getCurrentSubscription().then((s) => setSubscribed(!!s));
+  }, []);
+
+  if (supported === null) return null;
+
+  // iOS Safari tab — Notification API isn't exposed; tell the user to install.
+  if (isIOS() && !standalone) {
+    return (
+      <div className="px-4 pt-4">
+        <div className="bg-white rounded-xl shadow-sm p-4 flex items-center gap-3">
+          <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center">
+            <Bell className="w-5 h-5 text-slate-400" />
+          </div>
+          <div className="flex-1">
+            <p className="font-medium text-slate-900">{t('profile.notifications.title')}</p>
+            <p className="text-xs text-slate-500 mt-0.5">{t('profile.notifications.iosInstallHint')}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!supported) return null;
+
+  const handleToggle = async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      if (subscribed) {
+        await unsubscribeFromPush();
+        setSubscribed(false);
+      } else {
+        const r = await subscribeToPush();
+        if (r.ok) setSubscribed(true);
+        setPermission(pushPermission());
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const isOn = !!subscribed && permission === 'granted';
+  const isBlocked = permission === 'denied';
+
+  return (
+    <div className="px-4 pt-4">
+      <button
+        onClick={handleToggle}
+        disabled={busy || isBlocked}
+        className="w-full bg-white rounded-xl shadow-sm p-4 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left disabled:opacity-60 disabled:cursor-default"
+      >
+        <div
+          className={cn(
+            'w-10 h-10 rounded-full flex items-center justify-center',
+            isOn ? 'bg-emerald-100' : 'bg-slate-100'
+          )}
+        >
+          {isOn ? (
+            <Bell className="w-5 h-5 text-emerald-600" />
+          ) : (
+            <BellOff className="w-5 h-5 text-slate-400" />
+          )}
+        </div>
+        <div className="flex-1">
+          <p className="font-medium text-slate-900">{t('profile.notifications.title')}</p>
+          <p className="text-xs text-slate-500 mt-0.5">
+            {isBlocked
+              ? t('profile.notifications.blocked')
+              : isOn
+              ? t('profile.notifications.on')
+              : t('profile.notifications.off')}
+          </p>
+        </div>
+        <div
+          className={cn(
+            'relative inline-flex h-6 w-11 flex-shrink-0 rounded-full transition-colors',
+            isOn ? 'bg-emerald-600' : 'bg-slate-300',
+            isBlocked && 'bg-slate-200'
+          )}
+        >
+          <span
+            className={cn(
+              'absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform',
+              isOn && 'translate-x-5'
+            )}
+          />
+        </div>
+      </button>
     </div>
   );
 }

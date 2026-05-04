@@ -171,6 +171,11 @@ const dict = {
     'submitStation.mapPicker.confirm': 'Подтвердить координаты',
     'admin.tab.prices': 'Цены',
     'admin.tab.stations': 'Станции',
+    'profile.notifications.title': 'Push-уведомления',
+    'profile.notifications.on': 'Включены — будем сообщать о статусах ваших отправок',
+    'profile.notifications.off': 'Выключены — нажмите чтобы включить',
+    'profile.notifications.blocked': 'Заблокированы. Включите в настройках браузера для fuelmap.app',
+    'profile.notifications.iosInstallHint': 'Чтобы получать уведомления на iPhone, установите приложение: Поделиться → Добавить на главный экран',
 
     // ------- Fuels (same labels in every locale — these are the names
     // printed on Armenian pump boards regardless of the UI language).
@@ -373,6 +378,11 @@ const dict = {
     'submitStation.mapPicker.confirm': 'Հաստատել կոորդինատները',
     'admin.tab.prices': 'Գներ',
     'admin.tab.stations': 'ԲԿ-ներ',
+    'profile.notifications.title': 'Push-ծանուցումներ',
+    'profile.notifications.on': 'Միացված են — կհայտնենք քո ուղարկածների կարգավիճակների մասին',
+    'profile.notifications.off': 'Անջատված են — սեղմիր միացնելու համար',
+    'profile.notifications.blocked': 'Արգելափակված է։ Միացրու զննարկչի կարգավորումներում fuelmap.app-ի համար',
+    'profile.notifications.iosInstallHint': 'iPhone-ում ծանուցումներ ստանալու համար տեղադրիր հավելվածը՝ Տարածել → Ավելացնել գլխավոր էկրանին',
 
     // ------- Fuels (same labels in every locale — these are the names
     // printed on Armenian pump boards regardless of the UI language).

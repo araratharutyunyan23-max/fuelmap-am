@@ -7,7 +7,7 @@
 // Bump CACHE_VERSION whenever the shell or icons change to invalidate
 // old caches on the next page load.
 
-const CACHE_VERSION = 'fuelmap-shell-v1';
+const CACHE_VERSION = 'fuelmap-shell-v2';
 const PRECACHE_URLS = [
   '/',
   '/manifest.json',
@@ -58,5 +58,49 @@ self.addEventListener('fetch', (event) => {
         return res;
       })
       .catch(() => caches.match(req).then((cached) => cached ?? caches.match('/')))
+  );
+});
+
+// ---------------------------------------------------------------------------
+// Push events — fired when our /api/push/send route delivers a notification
+// for this device. Payload is JSON: { title, body, url? }.
+// ---------------------------------------------------------------------------
+self.addEventListener('push', (event) => {
+  let data = { title: 'FuelMap Armenia', body: '', url: '/' };
+  try {
+    if (event.data) data = { ...data, ...event.data.json() };
+  } catch {
+    // If the payload isn't JSON, fall back to plain text in the body.
+    if (event.data) data.body = event.data.text();
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      data: { url: data.url || '/' },
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const target = event.notification.data?.url || '/';
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((wins) => {
+      // Focus an open tab if there is one; otherwise open a new one.
+      for (const w of wins) {
+        try {
+          const wUrl = new URL(w.url);
+          if (wUrl.origin === self.location.origin) {
+            return w.focus().then(() => (w.navigate ? w.navigate(target) : null));
+          }
+        } catch {
+          /* noop */
+        }
+      }
+      return self.clients.openWindow(target);
+    })
   );
 });
