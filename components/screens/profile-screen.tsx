@@ -10,6 +10,7 @@ import {
   Clock,
   CheckCircle2,
   XCircle,
+  PlusCircle,
 } from 'lucide-react';
 import { BottomNav } from '@/components/bottom-nav';
 import { useAuth } from '@/lib/auth-store';
@@ -131,6 +132,22 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
           )}
         </div>
       </div>
+
+      {/* "Submit a new station" — for any signed-in user */}
+      {user && (
+        <div className="px-4 pt-4">
+          <button
+            onClick={() => onNavigate('submit-station')}
+            className="w-full bg-white rounded-xl shadow-sm p-4 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left"
+          >
+            <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+              <PlusCircle className="w-5 h-5 text-emerald-600" />
+            </div>
+            <span className="flex-1 font-medium text-slate-900">{t('profile.submitStation')}</span>
+            <ChevronRight className="w-5 h-5 text-slate-400" />
+          </button>
+        </div>
+      )}
 
       {/* Admin link — only for admins */}
       {isAdmin && (
