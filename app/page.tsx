@@ -21,6 +21,7 @@ import { LocaleProvider } from '@/lib/locale-store';
 import { FavoritesProvider } from '@/lib/favorites-store';
 import { AnalyticsProvider } from '@/components/analytics-provider';
 import { PushPermissionPrompt } from '@/components/push-permission-prompt';
+import { InstallTracker } from '@/components/install-tracker';
 
 type Screen = 'onboarding' | 'map' | 'list' | 'detail' | 'cheapest' | 'submit' | 'submit-station' | 'profile' | 'login' | 'register' | 'admin';
 
@@ -101,6 +102,7 @@ function AppShell() {
     <UserLocationProvider>
       <FavoritesProvider>
         <PushPermissionPrompt />
+        <InstallTracker />
         <StationsProvider>
         {currentScreen === 'onboarding' && (
           <OnboardingScreen
