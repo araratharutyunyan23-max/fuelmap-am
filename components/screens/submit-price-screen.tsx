@@ -1,17 +1,34 @@
 'use client';
 
 import { useMemo, useRef, useState } from 'react';
-import { ArrowLeft, Camera, Upload, Loader2, CheckCircle2, X } from 'lucide-react';
+import { ArrowLeft, Camera, Upload, Loader2, CheckCircle2, X, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BottomNav } from '@/components/bottom-nav';
 import { FUEL_TYPES } from '@/lib/data';
 import { useStations } from '@/lib/stations-store';
 import { useAuth } from '@/lib/auth-store';
+import { useUserLocation } from '@/lib/user-location';
 import { track } from '@/lib/analytics';
 import { useT } from '@/lib/locale-store';
 import type { TranslationKey } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
+
+// "I'm physically here" radius. Below this we trust geolocation enough to
+// pre-select a station for the user. Above it we'd rather force them to
+// search — submitting a price for the wrong AZS is worse than one extra tap.
+const NEAR_RADIUS_KM = 0.1; // 100 m
+
+function haversineKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const R = 6371;
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
+  const x =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
+}
 
 const MAX_DIM = 1600;
 const JPEG_QUALITY = 0.82;
@@ -60,6 +77,7 @@ export function SubmitPriceScreen({ onBack, onNavigate, initialStationId }: Subm
   const t = useT();
   const { stations, loading } = useStations();
   const { user, loading: authLoading } = useAuth();
+  const { location } = useUserLocation();
 
   const [stationId, setStationId] = useState<string | null>(initialStationId ?? null);
   const [stationQuery, setStationQuery] = useState('');
@@ -138,10 +156,30 @@ export function SubmitPriceScreen({ onBack, onNavigate, initialStationId }: Subm
 
   const fuelChips = FUEL_TYPES.filter((f) => ['92', '95', '98', 'diesel', 'lpg'].includes(f.id));
 
+  // Station the user is physically standing at, if any. Empty when we
+  // either don't have geolocation or the closest station is further than
+  // NEAR_RADIUS_KM — better to make the user search than auto-pick a wrong
+  // AZS and silently mis-attribute the price.
+  const nearestStation = useMemo(() => {
+    if (!location) return null;
+    let best: { id: string; distKm: number } | null = null;
+    for (const s of stations) {
+      const distKm = haversineKm(location, { lat: s.lat, lng: s.lng });
+      if (distKm <= NEAR_RADIUS_KM && (!best || distKm < best.distKm)) {
+        best = { id: s.id, distKm };
+      }
+    }
+    return best?.id ? stations.find((s) => s.id === best!.id) ?? null : null;
+  }, [stations, location]);
+
   const selectedStation = useMemo(() => {
+    // 1. Came in from a station detail screen.
     if (stationId) return stations.find((s) => s.id === stationId) ?? null;
-    return stations[0] ?? null;
-  }, [stationId, stations]);
+    // 2. User is physically at an AZS — pre-select it to save a tap.
+    if (nearestStation) return nearestStation;
+    // 3. Otherwise force search — never default to a random station.
+    return null;
+  }, [stationId, nearestStation, stations]);
 
   const stationMatches = useMemo(() => {
     const q = stationQuery.trim().toLowerCase();
@@ -281,7 +319,7 @@ export function SubmitPriceScreen({ onBack, onNavigate, initialStationId }: Subm
         {/* Station picker */}
         <div className="mb-6">
           <label className="text-sm font-medium text-slate-500 mb-2 block">{t('submit.station.label')}</label>
-          {selectedStation && (
+          {selectedStation ? (
             <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl mb-3">
               <div
                 className="w-1 h-10 rounded-full"
@@ -291,6 +329,11 @@ export function SubmitPriceScreen({ onBack, onNavigate, initialStationId }: Subm
                 <p className="font-medium text-slate-900 truncate">{selectedStation.name}</p>
                 <p className="text-sm text-slate-500 truncate">{selectedStation.address}</p>
               </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl mb-3">
+              <Search className="w-5 h-5 text-amber-600 flex-shrink-0" />
+              <p className="text-sm text-amber-900 flex-1">{t('submit.station.empty')}</p>
             </div>
           )}
           <input
