@@ -142,6 +142,8 @@ const dict = {
     'profile.viewAll': 'Все',
     'profile.savedStations': 'Сохранённые АЗС',
     'profile.achievements': 'Достижения',
+    'profile.privacy': 'Политика конфиденциальности',
+    'profile.terms': 'Условия использования',
 
     // ------- Fuels (same labels in every locale — these are the names
     // printed on Armenian pump boards regardless of the UI language).
@@ -315,6 +317,8 @@ const dict = {
     'profile.viewAll': 'Բոլորը',
     'profile.savedStations': 'Պահպանված ԲԿ-ներ',
     'profile.achievements': 'Նվաճումներ',
+    'profile.privacy': 'Գաղտնիության քաղաքականություն',
+    'profile.terms': 'Օգտագործման պայմաններ',
 
     // ------- Fuels (same labels in every locale — these are the names
     // printed on Armenian pump boards regardless of the UI language).

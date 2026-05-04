@@ -84,6 +84,19 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
         </div>
       )}
 
+      {/* Legal links */}
+      <div className="px-4 pt-6 pb-2">
+        <div className="flex items-center justify-center gap-4 text-xs text-slate-400">
+          <a href="/privacy" className="hover:text-slate-600 hover:underline">
+            {t('profile.privacy')}
+          </a>
+          <span>·</span>
+          <a href="/terms" className="hover:text-slate-600 hover:underline">
+            {t('profile.terms')}
+          </a>
+        </div>
+      </div>
+
       <BottomNav active="profile" onNavigate={onNavigate} />
     </div>
   );
