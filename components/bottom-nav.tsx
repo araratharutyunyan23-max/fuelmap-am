@@ -4,7 +4,12 @@ import { Map, List, Send, User, Plus } from 'lucide-react';
 import { useT } from '@/lib/locale-store';
 import { cn } from '@/lib/utils';
 
-const TELEGRAM_URL = 'https://t.me/fuelmap_armenia';
+// Public Telegram group for community Q&A. The personal handle
+// @fuelmap_armenia is reserved for direct contact (withdrawals,
+// support); the bottom-nav "Связь" tile takes everyone into the
+// group instead so first-time users land somewhere social, not in
+// a 1-on-1 with the maintainer.
+const TELEGRAM_URL = 'https://t.me/fuelmaparmeniachat';
 
 interface BottomNavProps {
   active: 'map' | 'list' | 'add' | 'profile';
