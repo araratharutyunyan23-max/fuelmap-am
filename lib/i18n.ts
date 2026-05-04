@@ -21,7 +21,7 @@ const dict = {
     // ------- Bottom nav
     'nav.map': 'Карта',
     'nav.list': 'Список',
-    'nav.telegram': 'Telegram',
+    'nav.telegram': 'Связь с нами',
     'nav.profile': 'Профиль',
 
     // ------- Onboarding
@@ -228,7 +228,7 @@ const dict = {
     // ------- Bottom nav
     'nav.map': 'Քարտեզ',
     'nav.list': 'Ցուցակ',
-    'nav.telegram': 'Telegram',
+    'nav.telegram': 'Կապ մեզ հետ',
     'nav.profile': 'Պրոֆիլ',
 
     // ------- Onboarding
