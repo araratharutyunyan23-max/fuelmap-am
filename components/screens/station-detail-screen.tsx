@@ -9,6 +9,8 @@ import { type Station } from '@/lib/data';
 import { useT } from '@/lib/locale-store';
 import type { TranslationKey } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
+import { useFavorites } from '@/lib/favorites-store';
+import { useAuth } from '@/lib/auth-store';
 
 interface StationDetailScreenProps {
   station: Station;
@@ -38,8 +40,20 @@ function buildRouteUrls(lat: number, lng: number) {
 
 export function StationDetailScreen({ station, onBack, onNavigate }: StationDetailScreenProps) {
   const t = useT();
+  const { user } = useAuth();
+  const { isFavorite, toggle: toggleFavorite } = useFavorites();
   const [showRouteSheet, setShowRouteSheet] = useState(false);
   const routeUrls = buildRouteUrls(station.lat, station.lng);
+  const fav = isFavorite(station.id);
+
+  const handleStarClick = () => {
+    if (!user) {
+      onNavigate('login');
+      return;
+    }
+    toggleFavorite(station.id);
+  };
+
   return (
     <div className="min-h-screen bg-white pb-20">
       {/* Hero */}
@@ -57,9 +71,23 @@ export function StationDetailScreen({ station, onBack, onNavigate }: StationDeta
           >
             <ArrowLeft className="w-5 h-5 text-white" />
           </button>
-          <button className="p-2 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30 transition-colors">
-            <Share2 className="w-5 h-5 text-white" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleStarClick}
+              aria-label={fav ? t('favorites.remove') : t('favorites.add')}
+              className="p-2 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30 transition-colors"
+            >
+              <Star
+                className={cn(
+                  'w-5 h-5 transition-colors',
+                  fav ? 'fill-amber-400 text-amber-400' : 'text-white'
+                )}
+              />
+            </button>
+            <button className="p-2 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30 transition-colors">
+              <Share2 className="w-5 h-5 text-white" />
+            </button>
+          </div>
         </div>
       </div>
 

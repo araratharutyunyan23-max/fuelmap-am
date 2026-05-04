@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, SlidersHorizontal, Badge } from 'lucide-react';
+import { Search, SlidersHorizontal, Star } from 'lucide-react';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { FuelChips } from '@/components/fuel-chips';
 import { BottomNav } from '@/components/bottom-nav';
@@ -9,6 +9,8 @@ import { type Station } from '@/lib/data';
 import { useStations } from '@/lib/stations-store';
 import { useT } from '@/lib/locale-store';
 import { cn } from '@/lib/utils';
+import { useFavorites } from '@/lib/favorites-store';
+import { useAuth } from '@/lib/auth-store';
 
 interface ListScreenProps {
   onNavigate: (screen: string) => void;
@@ -18,6 +20,8 @@ interface ListScreenProps {
 export function ListScreen({ onNavigate, onStationSelect }: ListScreenProps) {
   const t = useT();
   const { stations } = useStations();
+  const { user } = useAuth();
+  const { isFavorite, toggle: toggleFavorite } = useFavorites();
   const [selectedFuel, setSelectedFuel] = useState('95');
   const [sortBy, setSortBy] = useState<'distance' | 'price'>('price');
 
@@ -147,6 +151,29 @@ export function ListScreen({ onNavigate, onStationSelect }: ListScreenProps) {
                     </p>
                   </div>
                 )}
+
+                {/* Favorite star */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!user) {
+                      onNavigate('login');
+                      return;
+                    }
+                    toggleFavorite(station.id);
+                  }}
+                  aria-label={isFavorite(station.id) ? t('favorites.remove') : t('favorites.add')}
+                  className="ml-1 p-2 -m-2 flex-shrink-0 rounded-full hover:bg-slate-100"
+                >
+                  <Star
+                    className={cn(
+                      'w-5 h-5 transition-colors',
+                      isFavorite(station.id)
+                        ? 'fill-amber-400 text-amber-400'
+                        : 'text-slate-300'
+                    )}
+                  />
+                </button>
               </div>
             </button>
           );
