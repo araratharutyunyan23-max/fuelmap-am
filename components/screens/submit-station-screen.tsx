@@ -114,6 +114,12 @@ export function SubmitStationScreen({ onBack, onNavigate }: SubmitStationScreenP
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  // Prices the user fills in. 92 / 95 / lpg required, diesel optional.
+  // Stored as strings while editing so empty input doesn't auto-flip to 0.
+  const [price92, setPrice92] = useState('');
+  const [price95, setPrice95] = useState('');
+  const [priceDiesel, setPriceDiesel] = useState('');
+  const [priceLpg, setPriceLpg] = useState('');
 
   const [showMapPicker, setShowMapPicker] = useState(false);
   const [submitState, setSubmitState] = useState<SubmitState>('idle');
@@ -181,8 +187,23 @@ export function SubmitStationScreen({ onBack, onNavigate }: SubmitStationScreenP
     setPhotoUrl(null);
   };
 
+  // Plausible Armenian per-litre range — keeps obvious typos out of the
+  // submission flow before they hit the admin moderation queue.
+  const isPlausiblePrice = (raw: string) => {
+    const n = parseInt(raw, 10);
+    return Number.isFinite(n) && n >= 100 && n <= 1500;
+  };
+
   const canSubmit =
-    !!user && !!brand && !!coords && !uploadingPhoto && submitState !== 'sending';
+    !!user
+    && !!brand
+    && !!coords
+    && !uploadingPhoto
+    && submitState !== 'sending'
+    && isPlausiblePrice(price92)
+    && isPlausiblePrice(price95)
+    && isPlausiblePrice(priceLpg)
+    && (priceDiesel === '' || isPlausiblePrice(priceDiesel));
 
   const handleSubmit = async () => {
     setError(null);
@@ -191,6 +212,7 @@ export function SubmitStationScreen({ onBack, onNavigate }: SubmitStationScreenP
       return;
     }
     if (!brand || !coords) return;
+    if (!isPlausiblePrice(price92) || !isPlausiblePrice(price95) || !isPlausiblePrice(priceLpg)) return;
     setSubmitState('sending');
     const { error: err } = await supabase.from('station_submissions').insert({
       user_id: user.id,
@@ -200,6 +222,10 @@ export function SubmitStationScreen({ onBack, onNavigate }: SubmitStationScreenP
       lng: coords.lng,
       address: address.trim() || null,
       photo_url: photoUrl,
+      price_92:     parseInt(price92, 10),
+      price_95:     parseInt(price95, 10),
+      price_lpg:    parseInt(priceLpg, 10),
+      price_diesel: priceDiesel ? parseInt(priceDiesel, 10) : null,
     });
     if (err) {
       setSubmitState('idle');
@@ -207,7 +233,11 @@ export function SubmitStationScreen({ onBack, onNavigate }: SubmitStationScreenP
       track('station_submission_failed', { reason: err.message });
       return;
     }
-    track('station_submission_submitted', { brand, has_photo: !!photoUrl });
+    track('station_submission_submitted', {
+      brand,
+      has_photo: !!photoUrl,
+      has_diesel: !!priceDiesel,
+    });
     setSubmitState('sent');
   };
 
@@ -399,6 +429,39 @@ export function SubmitStationScreen({ onBack, onNavigate }: SubmitStationScreenP
           )}
         </div>
 
+        {/* Prices */}
+        <div className="mb-6">
+          <label className="text-sm font-medium text-slate-500 mb-2 block">
+            {t('submitStation.prices.label')}
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            <PriceInput
+              label="Regular *"
+              value={price92}
+              onChange={setPrice92}
+            />
+            <PriceInput
+              label="Premium *"
+              value={price95}
+              onChange={setPrice95}
+            />
+            <PriceInput
+              label="LPG *"
+              value={priceLpg}
+              onChange={setPriceLpg}
+            />
+            <PriceInput
+              label="Diesel"
+              value={priceDiesel}
+              onChange={setPriceDiesel}
+              optional
+            />
+          </div>
+          <p className="text-xs text-slate-400 mt-2">
+            {t('submitStation.prices.hint')}
+          </p>
+        </div>
+
         {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
 
         {submitState === 'sent' ? (
@@ -509,5 +572,44 @@ function MapPickerModal({ initial, onCancel, onConfirm }: MapPickerModalProps) {
         </div>
       </div>
     </div>
+  );
+}
+
+function PriceInput({
+  label,
+  value,
+  onChange,
+  optional,
+}: {
+  label: string;
+  value: string;
+  onChange: (next: string) => void;
+  optional?: boolean;
+}) {
+  return (
+    <label className="flex flex-col gap-1">
+      <span
+        className={
+          optional
+            ? 'text-xs text-slate-500'
+            : 'text-xs text-slate-700 font-medium'
+        }
+      >
+        {label}
+      </span>
+      <div className="relative">
+        <input
+          type="text"
+          inputMode="numeric"
+          value={value}
+          onChange={(e) => onChange(e.target.value.replace(/\D/g, '').slice(0, 4))}
+          placeholder="—"
+          className="w-full h-11 pl-3 pr-7 bg-slate-50 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        />
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400 pointer-events-none">
+          ֏
+        </span>
+      </div>
+    </label>
   );
 }

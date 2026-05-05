@@ -17,6 +17,11 @@ interface Submission {
   photo_url: string | null;
   status: string;
   created_at: string;
+  price_92: number | null;
+  price_95: number | null;
+  price_98: number | null;
+  price_diesel: number | null;
+  price_lpg: number | null;
 }
 
 type ActionState = Record<string, 'confirming' | 'rejecting' | undefined>;
@@ -32,7 +37,7 @@ export default function AdminStationsPage() {
     setLoading(true);
     supabase
       .from('station_submissions')
-      .select('id, user_id, brand, name, lat, lng, address, photo_url, status, created_at')
+      .select('id, user_id, brand, name, lat, lng, address, photo_url, status, created_at, price_92, price_95, price_98, price_diesel, price_lpg')
       .eq('status', 'pending')
       .order('created_at', { ascending: false })
       .then(({ data, error: err }) => {
@@ -143,6 +148,16 @@ export default function AdminStationsPage() {
                       <span className="font-mono text-slate-700">{s.user_id.slice(0, 8)}…</span>
                     </div>
 
+                    {(s.price_92 || s.price_95 || s.price_diesel || s.price_lpg) && (
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        {s.price_92    && <PriceBadge label="Regular" amd={s.price_92} />}
+                        {s.price_95    && <PriceBadge label="Premium" amd={s.price_95} />}
+                        {s.price_98    && <PriceBadge label="Super"   amd={s.price_98} />}
+                        {s.price_diesel && <PriceBadge label="Diesel"  amd={s.price_diesel} />}
+                        {s.price_lpg   && <PriceBadge label="LPG"     amd={s.price_lpg} />}
+                      </div>
+                    )}
+
                     <div className="flex gap-2 pt-2">
                       <Button
                         onClick={() => handleAction(s.id, 'confirmed')}
@@ -178,5 +193,14 @@ export default function AdminStationsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+function PriceBadge({ label, amd }: { label: string; amd: number }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-100 text-xs text-slate-700">
+      <span className="text-slate-500">{label}</span>
+      <span className="font-semibold tabular-nums">{amd} ֏</span>
+    </span>
   );
 }
