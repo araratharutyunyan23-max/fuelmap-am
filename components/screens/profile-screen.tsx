@@ -14,7 +14,9 @@ import {
   Bell,
   BellOff,
   Star,
+  Smartphone,
 } from 'lucide-react';
+import { installArticleUrl, isAppInstalled } from '@/lib/install-link';
 import {
   getCurrentSubscription,
   isIOS,
@@ -161,6 +163,10 @@ export function ProfileScreen({ onNavigate, onStationSelect }: ProfileScreenProp
 
       {/* Balance — show only for signed-in users */}
       {user && <BalanceCard balance={balance.amount} />}
+
+      {/* Install-as-PWA CTA — auto-hidden once running standalone. Visible
+          to guests too: a non-logged-in user is the most likely to need it. */}
+      <InstallCard />
 
       {/* "Submit a new station" — for any signed-in user */}
       {user && (
@@ -379,6 +385,42 @@ function BalanceCard({ balance }: { balance: number }) {
           {t('profile.balance.howEarned')}
         </p>
       </div>
+    </div>
+  );
+}
+
+// Hides itself when the page is already running as an installed PWA.
+// Same Telegraph article as on onboarding, picked by locale + platform.
+function InstallCard() {
+  const t = useT();
+  const { locale } = useLocale();
+  const [url, setUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (isAppInstalled()) return;
+    setUrl(installArticleUrl(locale));
+  }, [locale]);
+
+  if (!url) return null;
+
+  return (
+    <div className="px-4 pt-4">
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="w-full bg-white rounded-xl shadow-sm p-4 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left"
+      >
+        <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+          <Smartphone className="w-5 h-5 text-emerald-600" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-medium text-slate-900">{t('profile.install.title')}</p>
+          <p className="text-xs text-slate-500 mt-0.5">{t('profile.install.subtitle')}</p>
+        </div>
+        <ArrowUpRight className="w-5 h-5 text-slate-400" />
+      </a>
     </div>
   );
 }
