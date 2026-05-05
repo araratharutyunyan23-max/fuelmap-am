@@ -227,7 +227,7 @@ export function MapScreen({ onNavigate, onStationSelect }: MapScreenProps) {
               )}
             </button>
             {showBrandFilter && (
-              <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-slate-200 z-[2000] overflow-hidden flex flex-col" style={{ maxHeight: 'calc(100vh - 180px)' }}>
+              <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-slate-200 z-[2000] overflow-hidden flex flex-col" style={{ maxHeight: '300px' }}>
                 <div className="flex items-center justify-between px-3 py-2 border-b border-slate-100 flex-shrink-0">
                   <span className="text-sm font-semibold text-slate-900">{t('map.brands.title')}</span>
                   {selectedBrands.size > 0 && (
