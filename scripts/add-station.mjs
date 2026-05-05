@@ -32,6 +32,8 @@ const BRAND_COLORS = {
   'Art Petrol': '#db2777',
   'Gulf':       '#0c4a6e',
   'Shell':      '#fbbf24',
+  'Fly Oil':    '#2563eb',
+  'EDE':        '#4f46e5',
 };
 
 const DEFAULT_HOURS = [

@@ -26,6 +26,8 @@ const BRANDS = [
   { match: /\btitan\b|տիտան|титан/i, name: 'Titan', color: '#e11d48' },
   { match: /\bgulf\b|гулф/i, name: 'Gulf', color: '#0c4a6e' },
   { match: /art\s*petrol|արտ\s*պետրոլ|арт\s*петрол/i, name: 'Art Petrol', color: '#db2777' },
+  { match: /fly\s*oil|ֆլայ\s*օիլ|флай\s*ойл/i, name: 'Fly Oil', color: '#2563eb' },
+  { match: /\bede\b|էդէ|еде|эде/i, name: 'EDE', color: '#4f46e5' },
 ];
 
 // Stations that don't match any brand are dropped — see filter in main().

@@ -35,6 +35,8 @@ export const BRANDS: Brand[] = [
   { slug: 'Art Petrol', displayName: 'Art Petrol', color: '#db2777', tier: 1, initial: 'AR' },
   { slug: 'Gulf',       displayName: 'Gulf',       color: '#0c4a6e', tier: 1, initial: 'GF' },
   { slug: 'Shell',      displayName: 'Shell',      color: '#fbbf24', tier: 1, initial: 'SH' },
+  { slug: 'Fly Oil',    displayName: 'Fly Oil',    color: '#2563eb', tier: 1, initial: 'FO' },
+  { slug: 'EDE',        displayName: 'EDE',        color: '#4f46e5', tier: 1, initial: 'ED' },
 ];
 
 const BY_SLUG: Record<string, Brand> = Object.fromEntries(
