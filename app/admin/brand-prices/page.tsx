@@ -135,8 +135,8 @@ export default function AdminBrandPricesPage() {
           <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="bg-white rounded-xl border border-slate-200 overflow-x-auto">
+          <table className="w-full text-sm min-w-[640px]">
             <thead className="bg-slate-50">
               <tr className="text-left text-xs font-medium text-slate-500">
                 <th className="px-4 py-3">Бренд</th>
