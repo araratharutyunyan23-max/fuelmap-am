@@ -158,6 +158,7 @@ const dict = {
     'profile.install.title': 'Установить приложение',
     'profile.install.subtitle': 'Быстрый доступ с главного экрана + push-уведомления',
     'profile.install.cta': 'Как установить',
+    'profile.language': 'Язык',
 
     // ------- Submit station
     'submitStation.title': 'Сообщить новую АЗС',
@@ -385,6 +386,7 @@ const dict = {
     'profile.install.title': 'Տեղադրել հավելվածը',
     'profile.install.subtitle': 'Արագ մուտք գլխավոր էկրանից + push ծանուցումներ',
     'profile.install.cta': 'Ինչպես տեղադրել',
+    'profile.language': 'Լեզու',
 
     // ------- Submit station
     'submitStation.title': 'Ավելացնել նոր ԲԿ',

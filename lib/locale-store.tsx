@@ -12,7 +12,9 @@ import { translate, type Locale, type TranslationKey } from './i18n';
 import { supabase } from './supabase';
 
 const STORAGE_KEY = 'fuelmap.locale';
-const DEFAULT_LOCALE: Locale = 'ru';
+// Armenia-first product → land in Armenian by default. Existing users
+// already have their pick saved in localStorage so they aren't reset.
+const DEFAULT_LOCALE: Locale = 'hy';
 
 interface LocaleContextValue {
   locale: Locale;

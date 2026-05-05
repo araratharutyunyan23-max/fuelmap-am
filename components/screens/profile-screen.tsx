@@ -15,8 +15,10 @@ import {
   BellOff,
   Star,
   Smartphone,
+  Globe,
 } from 'lucide-react';
 import { installArticleUrl, isAppInstalled } from '@/lib/install-link';
+import { LanguageSwitcher } from '@/components/language-switcher';
 import {
   getCurrentSubscription,
   isIOS,
@@ -167,6 +169,9 @@ export function ProfileScreen({ onNavigate, onStationSelect }: ProfileScreenProp
       {/* Install-as-PWA CTA — auto-hidden once running standalone. Visible
           to guests too: a non-logged-in user is the most likely to need it. */}
       <InstallCard />
+
+      {/* Language picker — visible to everyone, including guests. */}
+      <LanguageRow />
 
       {/* "Submit a new station" — for any signed-in user */}
       {user && (
@@ -384,6 +389,21 @@ function BalanceCard({ balance }: { balance: number }) {
         <p className="text-[11px] text-slate-500 mt-3">
           {t('profile.balance.howEarned')}
         </p>
+      </div>
+    </div>
+  );
+}
+
+function LanguageRow() {
+  const t = useT();
+  return (
+    <div className="px-4 pt-4">
+      <div className="bg-white rounded-xl shadow-sm p-4 flex items-center gap-3">
+        <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center">
+          <Globe className="w-5 h-5 text-slate-500" />
+        </div>
+        <p className="flex-1 font-medium text-slate-900">{t('profile.language')}</p>
+        <LanguageSwitcher />
       </div>
     </div>
   );
