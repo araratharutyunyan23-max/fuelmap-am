@@ -155,6 +155,9 @@ const dict = {
     'profile.balance.progress': 'Накопи ещё {remaining} ֏ для вывода',
     'profile.balance.withdraw': 'Запросить вывод в Telegram',
     'profile.balance.howEarned': '+20 ֏ за каждую подтверждённую цену · максимум 2,000 ֏/мес',
+    'profile.install.title': 'Установить приложение',
+    'profile.install.subtitle': 'Быстрый доступ с главного экрана + push-уведомления',
+    'profile.install.cta': 'Как установить',
 
     // ------- Submit station
     'submitStation.title': 'Сообщить новую АЗС',
@@ -379,6 +382,9 @@ const dict = {
     'profile.balance.progress': 'Կուտակիր ևս {remaining} ֏ դուրսբերման համար',
     'profile.balance.withdraw': 'Հայտ Telegram-ում',
     'profile.balance.howEarned': '+20 ֏ յուրաքանչյուր հաստատված գնի համար · առավելագույնը 2,000 ֏/ամսում',
+    'profile.install.title': 'Տեղադրել հավելվածը',
+    'profile.install.subtitle': 'Արագ մուտք գլխավոր էկրանից + push ծանուցումներ',
+    'profile.install.cta': 'Ինչպես տեղադրել',
 
     // ------- Submit station
     'submitStation.title': 'Ավելացնել նոր ԲԿ',
