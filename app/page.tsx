@@ -12,7 +12,6 @@ import { SubmitStationScreen } from '@/components/screens/submit-station-screen'
 import { ProfileScreen } from '@/components/screens/profile-screen';
 import { LoginScreen } from '@/components/screens/login-screen';
 import { RegisterScreen } from '@/components/screens/register-screen';
-import { AdminScreen } from '@/components/screens/admin-screen';
 import { type Station } from '@/lib/data';
 import { StationsProvider } from '@/lib/stations-store';
 import { AuthProvider, useAuth } from '@/lib/auth-store';
@@ -23,7 +22,7 @@ import { AnalyticsProvider } from '@/components/analytics-provider';
 import { PushPermissionPrompt } from '@/components/push-permission-prompt';
 import { InstallTracker } from '@/components/install-tracker';
 
-type Screen = 'onboarding' | 'map' | 'list' | 'detail' | 'cheapest' | 'submit' | 'submit-station' | 'profile' | 'login' | 'register' | 'admin';
+type Screen = 'onboarding' | 'map' | 'list' | 'detail' | 'cheapest' | 'submit' | 'submit-station' | 'profile' | 'login' | 'register';
 
 function SplashScreen() {
   return (
@@ -50,19 +49,20 @@ function AppShell() {
   const [currentScreen, setCurrentScreen] = useState<Screen | null>(null);
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
   const [previousScreen, setPreviousScreen] = useState<Screen>('map');
-  const [highlightReportId, setHighlightReportId] = useState<string | null>(null);
 
-  // Deep link from Telegram: ?admin=<report_id> jumps straight into the
-  // admin screen with that report scrolled into view.
+  // Telegram bot still posts ?admin=<id> deep links from older messages —
+  // bounce those at the new /admin area instead of trying to render an
+  // admin screen inside the user app.
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
     const id = params.get('admin');
-    if (id) {
-      setHighlightReportId(id);
-      setCurrentScreen('admin');
-      window.history.replaceState({}, '', window.location.pathname);
+    if (!id) return;
+    if (id === 'stations') {
+      window.location.replace('/admin/stations');
+      return;
     }
+    window.location.replace(`/admin/prices?highlight=${encodeURIComponent(id)}`);
   }, []);
 
   // Once auth state resolves, route returning users straight to the map.
@@ -177,12 +177,6 @@ function AppShell() {
           <ProfileScreen onNavigate={handleNavigate} onStationSelect={handleStationSelect} />
         )}
 
-        {currentScreen === 'admin' && (
-          <AdminScreen
-            onBack={() => setCurrentScreen('profile')}
-            highlightId={highlightReportId}
-          />
-        )}
         </StationsProvider>
       </FavoritesProvider>
     </UserLocationProvider>

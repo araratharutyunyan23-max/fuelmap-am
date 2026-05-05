@@ -155,13 +155,69 @@ const BRAND_PRICE_RULES = {
   },
 };
 
-function deriveBrandPrices(brand, gppPrices) {
+// Read all brand_price_overrides once at the start of a run. Returns
+// Map<brand, Map<fuel_type, price>> so deriveBrandPrices can override
+// individual fuels per brand without changing the rest of the pipeline.
+async function fetchOverrides() {
+  const { data, error } = await supabase
+    .from('brand_price_overrides')
+    .select('brand, fuel_type, price');
+  if (error) {
+    console.warn('  brand_price_overrides fetch failed (using GPP only):', error.message);
+    return new Map();
+  }
+  const map = new Map();
+  for (const row of data ?? []) {
+    if (!map.has(row.brand)) map.set(row.brand, new Map());
+    map.get(row.brand).set(row.fuel_type, row.price);
+  }
+  return map;
+}
+
+const FUEL_LABEL_RU = {
+  '92': '92',
+  '95': '95',
+  '98': '98',
+  diesel: 'Дизель',
+  lpg: 'LPG',
+  cng: 'CNG',
+};
+
+function deriveBrandPrices(brand, gppPrices, overrideMap) {
+  // Overrides win across the board: if the admin set CPS/95 = 520, we
+  // ignore GPP for that pair AND any derived rule that pegged a price
+  // to the GPP value gets recomputed from the overridden 95.
+  const overrides = overrideMap.get(brand);
+  let prices = gppPrices.map((p) => {
+    if (overrides?.has(p.id)) {
+      return { ...p, price: overrides.get(p.id) };
+    }
+    return p;
+  });
+  // Add any override fuel that GPP doesn't have at all (e.g. CPS 92, Gulf 92).
+  if (overrides) {
+    for (const [fuelId, price] of overrides) {
+      if (!prices.some((p) => p.id === fuelId)) {
+        prices.push({ id: fuelId, label: FUEL_LABEL_RU[fuelId] ?? fuelId, price });
+      }
+    }
+  }
+  // Apply derived rules using the (possibly overridden) 95.
   const rules = BRAND_PRICE_RULES[brand];
-  if (!rules) return gppPrices;
-  const p95 = gppPrices.find((p) => p.id === '95')?.price;
-  if (p95 == null) return gppPrices;
-  const derived = Object.values(rules).map((fn) => fn(p95));
-  return [...gppPrices, ...derived];
+  if (!rules) return prices;
+  const p95 = prices.find((p) => p.id === '95')?.price;
+  if (p95 == null) return prices;
+  for (const [fuelId, fn] of Object.entries(rules)) {
+    // Don't double-write: if an override exists for this derived fuel,
+    // the admin's number wins.
+    if (overrides?.has(fuelId)) continue;
+    const derived = fn(p95);
+    // Replace existing entry of the same fuel id, or append.
+    const idx = prices.findIndex((p) => p.id === fuelId);
+    if (idx >= 0) prices[idx] = derived;
+    else prices.push(derived);
+  }
+  return prices;
 }
 
 // `trend` is the delta vs the previous DIFFERENT price — we want
@@ -349,6 +405,14 @@ async function main() {
   const otherTotal = [...otherIdsByBrand.values()].reduce((a, ids) => a + ids.length, 0);
   console.log(`  Flash: ${flashIds.length} · Max Oil: ${maxOilIds.length} · others: ${otherTotal} (${otherIdsByBrand.size} brands)`);
 
+  console.log('  Reading admin overrides …');
+  const overrideMap = await fetchOverrides();
+  if (overrideMap.size > 0) {
+    for (const [brand, fuels] of overrideMap) {
+      console.log(`    ${brand}: ${[...fuels.entries()].map(([k,v]) => `${k}=${v}`).join(', ')}`);
+    }
+  }
+
   // Snapshot existing prices BEFORE the upsert so we can detect what
   // changed and post a single summary to Telegram.
   console.log('  Reading existing prices for diff …');
@@ -361,7 +425,7 @@ async function main() {
   const maxOilRows = buildUpsertRows(maxOilIds, maxOilPrices, oldByKey);
   const otherRows = [];
   for (const [brand, ids] of otherIdsByBrand) {
-    const brandPrices = deriveBrandPrices(brand, gppPrices);
+    const brandPrices = deriveBrandPrices(brand, gppPrices, overrideMap);
     otherRows.push(...buildUpsertRows(ids, brandPrices, oldByKey));
   }
   const allRows = [...flashRows, ...maxOilRows, ...otherRows];

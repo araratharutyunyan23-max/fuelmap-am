@@ -181,11 +181,11 @@ export function ProfileScreen({ onNavigate, onStationSelect }: ProfileScreenProp
       {/* Push notifications toggle */}
       {user && <PushToggle />}
 
-      {/* Admin link — only for admins */}
+      {/* Admin area lives at /admin now — link is shown so admins can jump there from profile */}
       {isAdmin && (
         <div className="px-4 pt-4">
-          <button
-            onClick={() => onNavigate('admin')}
+          <a
+            href="/admin"
             className="w-full bg-white rounded-xl shadow-sm p-4 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left"
           >
             <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
@@ -193,7 +193,7 @@ export function ProfileScreen({ onNavigate, onStationSelect }: ProfileScreenProp
             </div>
             <span className="flex-1 font-medium text-slate-900">{t('profile.adminLink')}</span>
             <ChevronRight className="w-5 h-5 text-slate-400" />
-          </button>
+          </a>
         </div>
       )}
 
