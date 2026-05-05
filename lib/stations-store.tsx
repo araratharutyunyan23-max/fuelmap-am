@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { supabase } from './supabase';
-import type { Station } from './data';
+import type { FuelType, Station } from './data';
 import { useUserLocation } from './user-location';
 import { useLocale } from './locale-store';
 import { translate, type Locale } from './i18n';
@@ -99,8 +99,51 @@ export function StationsProvider({ children }: { children: ReactNode }) {
         setRawStations(mapped);
         setLoading(false);
       });
+
+    // Live-update prices when admin tweaks brand_price_overrides or the
+    // scraper writes a new row. Requires station_prices to be in the
+    // supabase_realtime publication (migration 026).
+    const channel = supabase
+      .channel('station_prices_live')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'station_prices' },
+        (payload) => {
+          if (cancelled) return;
+          if (payload.eventType === 'DELETE') return;
+          const row = payload.new as {
+            station_id: string;
+            fuel_type: string;
+            label: string;
+            price: number;
+            trend?: number | null;
+            updated_at: string;
+          };
+          setRawStations((prev) =>
+            prev.map((s) => {
+              if (s.id !== row.station_id) return s;
+              const i = s.prices.findIndex((p) => p.type === row.fuel_type);
+              const next = {
+                type: row.fuel_type as FuelType,
+                label: row.label,
+                price: row.price,
+                trend: row.trend ?? 0,
+                updatedAgo: '',
+                updatedAt: row.updated_at,
+              };
+              const prices = i >= 0
+                ? s.prices.map((p, idx) => (idx === i ? next : p))
+                : [...s.prices, next];
+              return { ...s, prices };
+            })
+          );
+        }
+      )
+      .subscribe();
+
     return () => {
       cancelled = true;
+      supabase.removeChannel(channel);
     };
   }, []);
 
