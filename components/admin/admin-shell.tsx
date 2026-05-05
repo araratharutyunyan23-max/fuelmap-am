@@ -11,8 +11,10 @@ import {
   Loader2,
   LogOut,
   MapPin,
+  Menu,
   Store,
   Users,
+  X,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
@@ -28,11 +30,15 @@ const NAV: { href: string; label: string; icon: typeof LayoutDashboard }[] = [
 export function AdminShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  // The login route is the one place the shell shouldn't gate on auth —
-  // that'd loop forever. Render the form raw, full-screen, no sidebar.
   const isLogin = pathname === '/admin/login';
   const [state, setState] = useState<'loading' | 'unauth' | 'not-admin' | 'ok'>('loading');
   const [email, setEmail] = useState<string | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // Close the drawer whenever route changes — feels right on mobile.
+  useEffect(() => {
+    setDrawerOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     if (isLogin) return;
@@ -55,7 +61,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isLogin]);
 
   useEffect(() => {
     if (state === 'unauth') router.replace('/admin/login');
@@ -94,14 +100,51 @@ export function AdminShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
-      {/* Sidebar */}
-      <aside className="w-60 bg-white border-r border-slate-200 flex flex-col">
-        <div className="px-5 py-4 border-b border-slate-200">
-          <p className="text-base font-semibold text-slate-900">FuelMap Admin</p>
-          <p className="text-xs text-slate-500 truncate">{email}</p>
+    <div className="min-h-screen bg-slate-50 lg:flex">
+      {/* Mobile top bar — only shown <lg, hamburger opens the drawer */}
+      <div className="lg:hidden sticky top-0 z-30 bg-white border-b border-slate-200 px-4 h-14 flex items-center justify-between">
+        <button
+          onClick={() => setDrawerOpen(true)}
+          aria-label="Open menu"
+          className="p-2 -ml-2 hover:bg-slate-100 rounded-lg"
+        >
+          <Menu className="w-5 h-5 text-slate-700" />
+        </button>
+        <p className="text-sm font-semibold text-slate-900">FuelMap Admin</p>
+        <div className="w-9" />
+      </div>
+
+      {/* Drawer overlay (mobile only when open) */}
+      {drawerOpen && (
+        <div
+          className="lg:hidden fixed inset-0 z-40 bg-black/40"
+          onClick={() => setDrawerOpen(false)}
+        />
+      )}
+
+      {/* Sidebar — slide-in on mobile, static on desktop */}
+      <aside
+        className={cn(
+          'fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 flex flex-col',
+          'transition-transform duration-200',
+          drawerOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        )}
+      >
+        <div className="px-5 py-4 border-b border-slate-200 flex items-start justify-between">
+          <div className="min-w-0">
+            <p className="text-base font-semibold text-slate-900">FuelMap Admin</p>
+            <p className="text-xs text-slate-500 truncate">{email}</p>
+          </div>
+          {/* Close button — only mobile */}
+          <button
+            onClick={() => setDrawerOpen(false)}
+            className="lg:hidden p-1 -mr-1 -mt-1 hover:bg-slate-100 rounded"
+            aria-label="Close menu"
+          >
+            <X className="w-4 h-4 text-slate-500" />
+          </button>
         </div>
-        <nav className="flex-1 p-3 space-y-1">
+        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
           {NAV.map((item) => {
             const active = pathname === item.href || pathname.startsWith(item.href + '/');
             const Icon = item.icon;
@@ -145,8 +188,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
       </aside>
 
       {/* Main */}
-      <main className="flex-1 overflow-x-hidden">
-        <div className="max-w-5xl mx-auto px-6 py-8">{children}</div>
+      <main className="flex-1 min-w-0">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8">{children}</div>
       </main>
     </div>
   );
