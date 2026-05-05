@@ -15,13 +15,21 @@ const INSTALL_URLS = {
   },
 } as const;
 
-function detectPlatform(): 'ios' | 'android' {
-  if (typeof navigator === 'undefined') return 'ios';
-  return /iPad|iPhone|iPod/.test(navigator.userAgent) ? 'ios' : 'android';
+function detectPlatform(): 'ios' | 'android' | 'desktop' {
+  if (typeof navigator === 'undefined') return 'desktop';
+  const ua = navigator.userAgent;
+  if (/iPad|iPhone|iPod/.test(ua)) return 'ios';
+  if (/Android/.test(ua)) return 'android';
+  return 'desktop';
 }
 
-export function installArticleUrl(locale: Locale): string {
-  return INSTALL_URLS[locale][detectPlatform()];
+// Returns null on desktop — there is no PWA-install flow worth pointing
+// at, and showing the Android article to a Windows user is misleading.
+// Callers should hide their CTA when this returns null.
+export function installArticleUrl(locale: Locale): string | null {
+  const platform = detectPlatform();
+  if (platform === 'desktop') return null;
+  return INSTALL_URLS[locale][platform];
 }
 
 // True when the page is running as an installed PWA (added to home screen
