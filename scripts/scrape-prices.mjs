@@ -139,21 +139,14 @@ async function scrapeGPPPrices() {
 // ---------------------------------------------------------------------------
 // Per-brand derived prices.
 //
-// Some brands don't publish 92 / 98 anywhere we can scrape, but their
-// prices follow a known fixed offset from the country-average 95
-// (Premium) that GPP gives us. We derive them here so the UI shows
-// real numbers instead of "Цены ещё не указаны".
-//
-// Add a brand here only after confirming a stable offset by walking
-// past their pumps (e.g. "CPS Premium 540, Regular 520, always −20").
+// Reserved for future fuel-derivation rules expressed as a function of
+// scraped 95. Empty for now — the admin's brand_price_overrides table
+// is the explicit source of truth. Removed the CPS "92 = 95 − 20"
+// auto-rule on 2026-05-05 because it was misleading: real CPS pumps
+// drift, and the admin would rather set both numbers explicitly.
 // ---------------------------------------------------------------------------
 
-const BRAND_PRICE_RULES = {
-  CPS: {
-    // Regular = Premium − 20 (confirmed by user 2026-05-03)
-    '92': (p95) => ({ id: '92', label: '92', price: p95 - 20 }),
-  },
-};
+const BRAND_PRICE_RULES = {};
 
 // Read all brand_price_overrides once at the start of a run. Returns
 // Map<brand, Map<fuel_type, price>> so deriveBrandPrices can override

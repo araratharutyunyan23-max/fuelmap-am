@@ -116,13 +116,7 @@ export default function AdminBrandPricesPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-slate-900 mb-2">Цены брендов</h1>
-      <p className="text-sm text-slate-500 mb-6">
-        Здесь можно вручную задать цену по бренду + топливу. Скрапер при следующем
-        запуске возьмёт твоё значение вместо средней по стране от GPP. Для CPS правило{' '}
-        <code className="bg-slate-100 px-1 rounded">92 = 95 − 20</code> применяется поверх
-        (если 95 переопределён, 92 пересчитается автоматически, либо переопредели вручную).
-      </p>
+      <h1 className="text-2xl font-semibold text-slate-900 mb-6">Цены брендов</h1>
 
       {error && (
         <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
