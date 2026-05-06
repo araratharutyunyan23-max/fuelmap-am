@@ -5,24 +5,18 @@
 //   2. globalpetrolprices.com — country-wide weekly averages (95/diesel/LPG) applied to
 //      every non-Flash station.
 //
-// Run: node --env-file=.env.local scripts/scrape-prices.mjs
+// Two ways to invoke:
+//   - locally: node --env-file=.env.local scripts/scrape-prices.mjs
+//   - from the Vercel cron route: import { runScraper } from '...'; runScraper(env)
 //
 // 92, 98 and CNG for non-Flash brands are left alone — we have no honest source.
 
 import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-if (!SUPABASE_URL || !SERVICE_KEY) {
-  console.error('Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
-  console.error('Run with: node --env-file=.env.local scripts/scrape-prices.mjs');
-  process.exit(1);
-}
-
-const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
-  auth: { autoRefreshToken: false, persistSession: false },
-});
+// Initialised inside runScraper() so importing this module doesn't fire
+// process.exit on missing env, and the Vercel route can pass its own
+// env values explicitly.
+let supabase = null;
 
 const UA = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36';
 
@@ -366,7 +360,16 @@ async function notifyTelegram(events) {
   }
 }
 
-async function main() {
+export async function runScraper() {
+  const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const SERVICE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!SUPABASE_URL || !SERVICE_KEY) {
+    throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
+  }
+  supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
   console.log('1/4  Scraping flashpetrol.am ...');
   const flashPrices = await scrapeFlash();
   console.log('  →', flashPrices.map((p) => `${p.label}=${p.price}`).join(', '));
@@ -438,7 +441,14 @@ async function main() {
   console.log('Done.');
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+// Auto-run only when invoked directly via `node scripts/scrape-prices.mjs`.
+// Importing this module from the Vercel cron route does NOT trigger main().
+const isMainCli =
+  import.meta.url === `file://${process.argv[1]}` ||
+  process.argv[1]?.endsWith('scrape-prices.mjs');
+if (isMainCli) {
+  runScraper().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}
