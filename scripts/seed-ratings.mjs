@@ -31,6 +31,24 @@ const RATING_WEIGHTS = [
   { rating: 2, weight: 5 },
 ];
 
+// Display names attached to each review row. station_reviews stores the
+// name denormalised at submit time; without this the UI falls back to
+// "Гость" / "Հյուր". Pool is intentionally Armenian-script — feels
+// authentic regardless of which locale the viewer is on.
+const FIRST_NAMES = [
+  'Արամ', 'Տիգրան', 'Հայկ', 'Ներսես', 'Արտաշես', 'Արմեն', 'Վահան', 'Գոռ',
+  'Հովհաննես', 'Գագիկ', 'Դավիթ', 'Վարդան', 'Կարեն', 'Աշոտ', 'Նարեկ', 'Գևորգ',
+  'Անի', 'Սիրանուշ', 'Մարիամ', 'Լուսինե', 'Անահիտ', 'Նարինե', 'Նունե',
+  'Մարինե', 'Հասմիկ', 'Կարինե', 'Սոնա', 'Թամարա', 'Արփինե',
+];
+const SURNAME_INITIALS = ['Հ.', 'Մ.', 'Ս.', 'Ա.', 'Կ.', 'Թ.', 'Բ.', 'Գ.', 'Տ.', 'Ն.', 'Պ.', 'Վ.'];
+
+function pickDisplayName() {
+  const f = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)];
+  const i = SURNAME_INITIALS[Math.floor(Math.random() * SURNAME_INITIALS.length)];
+  return `${f} ${i}`;
+}
+
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 if (!url || !key) {
@@ -94,9 +112,45 @@ async function ensureSeedUsers() {
   return out;
 }
 
+// Existing seed reviews from earlier runs may have user_name = null;
+// the UI then renders "Гость". Patch them in place.
+async function backfillMissingNames(seedUserIds) {
+  const { data: missing, error } = await sb
+    .from('station_reviews')
+    .select('id')
+    .in('user_id', seedUserIds)
+    .is('user_name', null);
+  if (error) throw error;
+  if (missing.length === 0) {
+    console.log('No seed reviews with missing user_name.');
+    return;
+  }
+  console.log(`Backfilling user_name on ${missing.length} existing seed reviews...`);
+  let done = 0;
+  // Concurrency 20 keeps it under a minute even at ~500 rows.
+  const queue = [...missing];
+  await Promise.all(
+    Array.from({ length: 20 }, async () => {
+      while (queue.length) {
+        const row = queue.shift();
+        const { error: uerr } = await sb
+          .from('station_reviews')
+          .update({ user_name: pickDisplayName() })
+          .eq('id', row.id);
+        if (uerr) console.error(`  ${row.id}: ${uerr.message}`);
+        done++;
+        if (done % 50 === 0) process.stdout.write(`  ${done}/${missing.length}\r`);
+      }
+    })
+  );
+  console.log(`\n  ${done}/${missing.length} done.`);
+}
+
 async function main() {
   const seedUsers = await ensureSeedUsers();
   console.log(`Seed users: ${seedUsers.map((u) => u.email).join(', ')}`);
+
+  await backfillMissingNames(seedUsers.map((u) => u.id));
 
   const { data: stations, error: serr } = await sb.from('stations').select('id');
   if (serr) throw serr;
@@ -112,6 +166,7 @@ async function main() {
       rows.push({
         station_id: station.id,
         user_id: u.id,
+        user_name: pickDisplayName(),
         rating: pickWeighted(RATING_WEIGHTS),
         comment: null,
         created_at: randomCreatedAtIso(),
