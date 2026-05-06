@@ -29,6 +29,22 @@ const FUEL_ARM: Record<string, string> = {
   lpg: 'Գազ (LPG)',
 };
 
+// Armenian month names — nominative for image (less inflected, reads
+// like a header), genitive for the caption sentence.
+const ARM_MONTHS_NOM = ['Հունվար','Փետրվար','Մարտ','Ապրիլ','Մայիս','Հունիս','Հուլիս','Օգոստոս','Սեպտեմբեր','Հոկտեմբեր','Նոյեմբեր','Դեկտեմբեր'];
+const ARM_MONTHS_GEN = ['Հունվարի','Փետրվարի','Մարտի','Ապրիլի','Մայիսի','Հունիսի','Հուլիսի','Օգոստոսի','Սեպտեմբերի','Հոկտեմբերի','Նոյեմբերի','Դեկտեմբերի'];
+
+function yerevanDate(): { day: number; month: number; year: number } {
+  const s = new Date().toLocaleString('en-US', {
+    timeZone: 'Asia/Yerevan',
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+  });
+  const [m, d, y] = s.split('/').map(Number);
+  return { day: d, month: m - 1, year: y };
+}
+
 interface CheapestRow {
   fuel: string;
   price: number;
@@ -61,7 +77,7 @@ async function fetchCheapest(supabase: any): Promise<CheapestRow[]> {
   return out;
 }
 
-function renderSvg(rows: CheapestRow[]): string {
+function renderSvg(rows: CheapestRow[], dateUpper: string): string {
   // 1080×1080, dark navy gradient bg, emerald accents. Armenian
   // subtitle uses fontconfig fallback (DejaVu Sans / Sylfaen / Noto
   // Sans Armenian) — all of these have Armenian glyph coverage on
@@ -103,7 +119,7 @@ function renderSvg(rows: CheapestRow[]): string {
   <rect x="0" y="0" width="1080" height="8" fill="url(#accent)"/>
 
   <text x="80" y="180" font-family='${FONT}' font-size="80" font-weight="900" fill="#ffffff">FuelMap <tspan fill="#10b981">Armenia</tspan></text>
-  <text x="80" y="240" font-family='${FONT}' font-size="34" font-weight="600" fill="#94a3b8">ԱՅՍՕՐՎԱ ԱՄԵՆԱԷԺԱՆ ԳՆԵՐԸ</text>
+  <text x="80" y="240" font-family='${FONT}' font-size="34" font-weight="600" fill="#94a3b8">${dateUpper} · ԱՄԵՆԱԷԺԱՆ ԳՆԵՐԸ</text>
 
   <line x1="80" y1="370" x2="1000" y2="370" stroke="#334155" stroke-width="2"/>
   ${lines}
@@ -116,17 +132,17 @@ function renderSvg(rows: CheapestRow[]): string {
 `;
 }
 
-function buildCaption(rows: CheapestRow[]): string {
+function buildCaption(rows: CheapestRow[], dateGenitive: string): string {
   const lines = rows.map(
     (r) => `⛽ ${FUEL_ARM[r.fuel]} — ${r.price} ֏ · ${r.brand}`
   );
   return [
-    '☀️ Բարի լույս! Այսօրվա ամենաէժան գները Հայաստանում:',
+    `☀️ Բարի լույս! ${dateGenitive} — Հայաստանի ամենաէժան գները:`,
     '',
     ...lines,
     '',
     '🗺 Բոլոր ԲԿ-ները քարտեզի վրա — fuelmap.app',
-    '💬 Քննարկում՝ @fuelmaparmeniachat',
+    '✈️ Telegram: @fuelmaparmeniachat',
     '',
     '#fuelmap #fuelmaparmenia #բենզին #գազ #երևան #հայաստան #yerevan #armenia',
   ].join('\n');
@@ -207,10 +223,14 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ ok: false, reason: 'no prices in db' }, { status: 200 });
     }
 
-    const svg = renderSvg(rows);
+    const { day, month } = yerevanDate();
+    const dateUpper = `${day} ${ARM_MONTHS_NOM[month].toUpperCase()}`;
+    const dateGenitive = `${day} ${ARM_MONTHS_GEN[month]}`;
+
+    const svg = renderSvg(rows, dateUpper);
     const jpeg = await sharp(Buffer.from(svg)).jpeg({ quality: 88 }).toBuffer();
     const imageUrl = await uploadToStorage(supabase, jpeg);
-    const postId = await publishToInstagram(imageUrl, buildCaption(rows));
+    const postId = await publishToInstagram(imageUrl, buildCaption(rows, dateGenitive));
 
     return NextResponse.json({
       ok: true,
