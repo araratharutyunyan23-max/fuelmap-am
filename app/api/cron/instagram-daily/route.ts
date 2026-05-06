@@ -79,6 +79,14 @@ function renderSvg(rows: CheapestRow[]): string {
     })
     .join('');
 
+  // Telegram brand icon (paper plane) inlined as SVG path so we don't
+  // depend on emoji rendering — looks consistent across renderers.
+  const tgIcon = `
+    <g transform="translate(80,990)">
+      <circle cx="22" cy="22" r="22" fill="#229ED9"/>
+      <path d="M9.5 22.2 l28-12.5 c1.4-.6 2.6.4 2.2 2.1 l-4.4 20.7 c-.3 1.3-1.1 1.6-2.2 1 l-6-4.4 -2.9 2.8 c-.3.3-.6.6-1.2.6 l.4-6.1 11.2-10.1 c.5-.4-.1-.6-.7-.3 L20 22.5 13.7 20.6 c-1.4-.4-1.4-1.4.3-2 z" fill="#fff"/>
+    </g>`;
+
   return `
 <svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">
   <defs>
@@ -102,7 +110,8 @@ function renderSvg(rows: CheapestRow[]): string {
   <line x1="80" y1="900" x2="1000" y2="900" stroke="#334155" stroke-width="2"/>
 
   <text x="80" y="970"  font-family='${FONT}' font-size="38" font-weight="700" fill="#10b981">🌐 fuelmap.app</text>
-  <text x="80" y="1025" font-family='${FONT}' font-size="32" font-weight="500" fill="#94a3b8">💬 t.me/fuelmap_armenia</text>
+  ${tgIcon}
+  <text x="145" y="1023" font-family='${FONT}' font-size="32" font-weight="500" fill="#cbd5e1">Telegram: <tspan fill="#ffffff" font-weight="700">@fuelmaparmeniachat</tspan></text>
 </svg>
 `;
 }
@@ -117,7 +126,7 @@ function buildCaption(rows: CheapestRow[]): string {
     ...lines,
     '',
     '🗺 Բոլոր ԲԿ-ները քարտեզի վրա — fuelmap.app',
-    '💬 Քննարկում՝ t.me/fuelmaparmeniachat',
+    '💬 Քննարկում՝ @fuelmaparmeniachat',
     '',
     '#fuelmap #fuelmaparmenia #բենզին #գազ #երևան #հայաստան #yerevan #armenia',
   ].join('\n');
