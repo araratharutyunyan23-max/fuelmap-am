@@ -147,8 +147,7 @@ export default function PrivacyPage() {
 
         <h2 className="text-lg font-semibold mt-6 mb-2">Дети</h2>
         <p>
-          Сервис не предназначен для лиц младше 16 лет. Если узнаем, что
-          зарегистрирован ребёнок — удалим аккаунт.
+          Сервис не предназначен для лиц младше 13 лет.
         </p>
 
         <h2 className="text-lg font-semibold mt-6 mb-2">Изменения</h2>
@@ -262,8 +261,7 @@ export default function PrivacyPage() {
 
         <h2 className="text-lg font-semibold mt-6 mb-2">Երեխաներ</h2>
         <p>
-          Ծառայությունը նախատեսված չէ 16 տարեկանից փոքրերի համար։ Եթե իմանանք,
-          որ երեխա է գրանցված՝ կջնջենք հաշիվը։
+          Ծառայությունը նախատեսված չէ 13 տարեկանից փոքրերի համար։
         </p>
 
         <h2 className="text-lg font-semibold mt-6 mb-2">Փոփոխություններ</h2>
