@@ -1,7 +1,7 @@
-// Daily Instagram Story — finds the cheapest 95-octane station for
-// today and publishes a 1080x1920 Story to @fuelmap_armenia.
-// Fires from Vercel Cron at 11:05 Yerevan (07:05 UTC), five minutes
-// after the feed post so we don't double-spam the audience.
+// Daily Instagram Story — finds the cheapest Regular (92), Premium (95)
+// and LPG stations for today and publishes a 1080x1920 Story to
+// @fuelmap_armenia. Fires from Vercel Cron at 11:05 Yerevan (07:05 UTC),
+// five minutes after the feed post so we don't double-spam the audience.
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
@@ -18,6 +18,12 @@ const FONT_BOLD: ArrayBuffer = readFileSync(join(FONT_DIR, 'NotoSansArmenian-Bol
 
 const ARM_MONTHS_GEN = ['Հունվարի','Փետրվարի','Մարտի','Ապրիլի','Մայիսի','Հունիսի','Հուլիսի','Օգոստոսի','Սեպտեմբերի','Հոկտեմբերի','Նոյեմբերի','Դեկտեմբերի'];
 
+const FUELS_TO_SHOW = [
+  { key: '92',  label: 'Regular' },
+  { key: '95',  label: 'Premium' },
+  { key: 'lpg', label: 'LPG' },
+] as const;
+
 function yerevanDate(): { day: number; month: number; year: number } {
   const s = new Date().toLocaleString('en-US', {
     timeZone: 'Asia/Yerevan',
@@ -28,25 +34,33 @@ function yerevanDate(): { day: number; month: number; year: number } {
 }
 
 type CheapestRow = {
+  fuel: string;
+  label: string;
   price: number;
   brand: string;
   name: string;
   address: string;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function fetchCheapest95(supabase: any): Promise<CheapestRow | null> {
+async function fetchCheapestForFuel(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: any,
+  fuel: string,
+  label: string,
+): Promise<CheapestRow | null> {
   const { data, error } = await supabase
     .from('station_prices')
     .select('price, stations:station_id!inner(name, brand, address, address_hy)')
-    .eq('fuel_type', '95')
+    .eq('fuel_type', fuel)
     .gt('price', 0)
     .order('price', { ascending: true })
     .limit(1);
-  if (error) throw new Error(`fetchCheapest95: ${error.message}`);
+  if (error) throw new Error(`fetchCheapest ${fuel}: ${error.message}`);
   const row = (data ?? [])[0];
   if (!row?.stations) return null;
   return {
+    fuel,
+    label,
     price: row.price as number,
     brand: row.stations.brand as string,
     name: (row.stations.name as string) ?? row.stations.brand,
@@ -54,7 +68,7 @@ async function fetchCheapest95(supabase: any): Promise<CheapestRow | null> {
   };
 }
 
-function renderStory(row: CheapestRow, dateGenitive: string): Promise<ArrayBuffer> {
+function renderStory(rows: CheapestRow[], dateGenitive: string): Promise<ArrayBuffer> {
   return new ImageResponse(
     (
       <div
@@ -66,64 +80,58 @@ function renderStory(row: CheapestRow, dateGenitive: string): Promise<ArrayBuffe
           background: 'linear-gradient(160deg, #0f172a 0%, #1e293b 60%, #064e3b 100%)',
           fontFamily: 'NSArm',
           color: '#ffffff',
-          padding: '120px 80px',
+          padding: '110px 70px 90px 70px',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'baseline' }}>
           <div style={{ display: 'flex', fontSize: 72, fontWeight: 900 }}>FuelMap</div>
           <div style={{ display: 'flex', fontSize: 72, fontWeight: 900, color: '#10b981', marginLeft: 18 }}>Armenia</div>
         </div>
-        <div style={{ display: 'flex', marginTop: 16, fontSize: 36, color: '#94a3b8' }}>
+        <div style={{ display: 'flex', marginTop: 12, fontSize: 34, color: '#94a3b8' }}>
           {dateGenitive}
         </div>
 
-        <div style={{ display: 'flex', flex: 1 }} />
-
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-          <div style={{ display: 'flex', fontSize: 56, fontWeight: 700, color: '#cbd5e1', lineHeight: 1.1 }}>
-            Ամենաէժան
-          </div>
-          <div style={{ display: 'flex', alignItems: 'baseline', marginTop: 8 }}>
-            <div style={{ display: 'flex', fontSize: 200, fontWeight: 900, color: '#10b981', lineHeight: 1 }}>95</div>
-            <div style={{ display: 'flex', fontSize: 56, fontWeight: 700, color: '#cbd5e1', marginLeft: 28 }}>այսօր</div>
-          </div>
+        <div style={{ display: 'flex', marginTop: 60, fontSize: 64, fontWeight: 800, color: '#ffffff', lineHeight: 1.1 }}>
+          Ամենաէժան այսօր
         </div>
 
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            marginTop: 80,
-            padding: '50px 56px',
-            background: 'rgba(15,23,42,0.65)',
-            borderRadius: 32,
-            border: '2px solid #10b981',
-          }}
-        >
-          <div style={{ display: 'flex', fontSize: 56, fontWeight: 900, color: '#ffffff' }}>{row.brand}</div>
-          {row.name && row.name !== row.brand ? (
-            <div style={{ display: 'flex', fontSize: 36, color: '#cbd5e1', marginTop: 12 }}>{row.name}</div>
-          ) : (
-            <div style={{ display: 'flex' }} />
-          )}
-          {row.address ? (
-            <div style={{ display: 'flex', fontSize: 32, color: '#94a3b8', marginTop: 12, lineHeight: 1.3 }}>{row.address}</div>
-          ) : (
-            <div style={{ display: 'flex' }} />
-          )}
-          <div style={{ display: 'flex', alignItems: 'baseline', marginTop: 36 }}>
-            <div style={{ display: 'flex', fontSize: 160, fontWeight: 900, color: '#10b981', lineHeight: 1 }}>
-              {row.price}
+        <div style={{ display: 'flex', flexDirection: 'column', marginTop: 56 }}>
+          {rows.map((row) => (
+            <div
+              key={row.fuel}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                marginBottom: 32,
+                padding: '34px 44px',
+                background: 'rgba(15,23,42,0.65)',
+                borderRadius: 28,
+                border: '2px solid #10b981',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'baseline' }}>
+                <div style={{ display: 'flex', fontSize: 56, fontWeight: 900, color: '#10b981' }}>{row.label}</div>
+                <div style={{ display: 'flex', flex: 1 }} />
+                <div style={{ display: 'flex', fontSize: 124, fontWeight: 900, color: '#ffffff', lineHeight: 1 }}>
+                  {row.price}
+                </div>
+                <div style={{ display: 'flex', fontSize: 40, fontWeight: 700, color: '#cbd5e1', marginLeft: 16 }}>֏ / լ</div>
+              </div>
+              <div style={{ display: 'flex', fontSize: 38, fontWeight: 700, color: '#ffffff', marginTop: 16 }}>{row.brand}</div>
+              {row.address ? (
+                <div style={{ display: 'flex', fontSize: 26, color: '#94a3b8', marginTop: 6, lineHeight: 1.3 }}>{row.address}</div>
+              ) : (
+                <div style={{ display: 'flex' }} />
+              )}
             </div>
-            <div style={{ display: 'flex', fontSize: 52, fontWeight: 700, color: '#cbd5e1', marginLeft: 24 }}>֏ / լ</div>
-          </div>
+          ))}
         </div>
 
         <div style={{ display: 'flex', flex: 1 }} />
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
           <div style={{ display: 'flex', fontSize: 44, fontWeight: 700, color: '#10b981' }}>🌐 fuelmap.app</div>
-          <div style={{ display: 'flex', fontSize: 32, color: '#cbd5e1', marginTop: 14 }}>
+          <div style={{ display: 'flex', fontSize: 30, color: '#cbd5e1', marginTop: 12 }}>
             բոլոր ԲԿ-ները քարտեզի վրա
           </div>
         </div>
@@ -214,19 +222,22 @@ export async function GET(req: NextRequest) {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    const cheapest = await fetchCheapest95(supabase);
-    if (!cheapest) {
-      return NextResponse.json({ ok: false, reason: 'no 95 prices in db' }, { status: 200 });
+    const fetched = await Promise.all(
+      FUELS_TO_SHOW.map((f) => fetchCheapestForFuel(supabase, f.key, f.label))
+    );
+    const rows = fetched.filter((r): r is CheapestRow => r !== null);
+    if (rows.length === 0) {
+      return NextResponse.json({ ok: false, reason: 'no prices in db' }, { status: 200 });
     }
 
     const { day, month } = yerevanDate();
     const dateGenitive = `${day} ${ARM_MONTHS_GEN[month]}`;
 
-    const png = Buffer.from(await renderStory(cheapest, dateGenitive));
+    const png = Buffer.from(await renderStory(rows, dateGenitive));
     const imageUrl = await uploadToStorage(supabase, png);
     const storyId = await publishStory(imageUrl);
 
-    return NextResponse.json({ ok: true, storyId, imageUrl, cheapest });
+    return NextResponse.json({ ok: true, storyId, imageUrl, rows });
   } catch (err) {
     console.error('[cron/instagram-story-cheapest]', err);
     const message = err instanceof Error ? err.message : String(err);
