@@ -89,6 +89,13 @@ function renderImage(table: BrandTable, dateUpper: string): Promise<ArrayBuffer>
 
   const valueColor = (v: number | undefined) => (v ? '#10b981' : '#475569');
 
+  // Satori expects every <div> with >1 child to have an explicit
+  // display value. Easiest path is to add display:'flex' on every
+  // wrapper and pass styles explicitly. Top accent bar moved to be a
+  // regular flex item (no position:absolute — Satori has weak support
+  // for it and it's an extra child source).
+  const headerCellStyle = { fontSize: 28, fontWeight: 700, color: '#94a3b8' } as const;
+
   const response = new ImageResponse(
     (
       <div
@@ -100,83 +107,71 @@ function renderImage(table: BrandTable, dateUpper: string): Promise<ArrayBuffer>
           background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
           fontFamily: 'NSArm',
           color: '#ffffff',
-          padding: '60px 80px',
         }}
       >
-        {/* Top accent bar */}
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 8,
-            background: 'linear-gradient(90deg, #10b981 0%, #34d399 100%)',
-          }}
-        />
+        <div style={{ display: 'flex', height: 8, background: 'linear-gradient(90deg, #10b981 0%, #34d399 100%)' }} />
 
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'baseline' }}>
-          <div style={{ fontSize: 80, fontWeight: 900, color: '#ffffff' }}>FuelMap</div>
-          <div style={{ fontSize: 80, fontWeight: 900, color: '#10b981', marginLeft: 20 }}>Armenia</div>
-        </div>
-        <div style={{ marginTop: 8, fontSize: 32, fontWeight: 600, color: '#94a3b8' }}>
-          {`${dateUpper} · ՎԱՌԵԼԻՔԻ ԳՆԵՐԸ ՀԱՅԱՍՏԱՆՈՒՄ`}
-        </div>
-        <div style={{ marginTop: 4, fontSize: 26, fontWeight: 500, color: '#64748b' }}>
-          {'գները՝ դրամ/լիտր'}
+        <div style={{ display: 'flex', flexDirection: 'column', padding: '60px 80px 0 80px' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline' }}>
+            <div style={{ display: 'flex', fontSize: 80, fontWeight: 900, color: '#ffffff' }}>FuelMap</div>
+            <div style={{ display: 'flex', fontSize: 80, fontWeight: 900, color: '#10b981', marginLeft: 20 }}>Armenia</div>
+          </div>
+          <div style={{ display: 'flex', marginTop: 8, fontSize: 32, fontWeight: 600, color: '#94a3b8' }}>
+            {`${dateUpper} · ՎԱՌԵԼԻՔԻ ԳՆԵՐԸ ՀԱՅԱՍՏԱՆՈՒՄ`}
+          </div>
+          <div style={{ display: 'flex', marginTop: 4, fontSize: 26, fontWeight: 500, color: '#64748b' }}>
+            գները՝ դրամ/լիտր
+          </div>
         </div>
 
-        {/* Table header */}
-        <div style={{ display: 'flex', alignItems: 'center', marginTop: 70, paddingBottom: 12, borderBottom: '1px solid #1e293b' }}>
-          <div style={{ flex: '0 0 360px', fontSize: 28, fontWeight: 700, color: '#94a3b8' }}>ԲՐԵՆԴ</div>
-          <div style={{ flex: 1, fontSize: 28, fontWeight: 700, color: '#94a3b8', textAlign: 'right' }}>{FUEL_HEAD['92']}</div>
-          <div style={{ flex: 1, fontSize: 28, fontWeight: 700, color: '#94a3b8', textAlign: 'right' }}>{FUEL_HEAD['95']}</div>
-          <div style={{ flex: 1, fontSize: 28, fontWeight: 700, color: '#94a3b8', textAlign: 'right' }}>{FUEL_HEAD['lpg']}</div>
-          <div style={{ flex: 1, fontSize: 28, fontWeight: 700, color: '#94a3b8', textAlign: 'right' }}>{FUEL_HEAD['diesel']}</div>
+        <div style={{ display: 'flex', flexDirection: 'column', padding: '70px 80px 0 80px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', paddingBottom: 12, borderBottom: '1px solid #1e293b' }}>
+            <div style={{ display: 'flex', flex: '0 0 360px', ...headerCellStyle }}>ԲՐԵՆԴ</div>
+            <div style={{ display: 'flex', flex: 1, justifyContent: 'flex-end', ...headerCellStyle }}>{FUEL_HEAD['92']}</div>
+            <div style={{ display: 'flex', flex: 1, justifyContent: 'flex-end', ...headerCellStyle }}>{FUEL_HEAD['95']}</div>
+            <div style={{ display: 'flex', flex: 1, justifyContent: 'flex-end', ...headerCellStyle }}>{FUEL_HEAD['lpg']}</div>
+            <div style={{ display: 'flex', flex: 1, justifyContent: 'flex-end', ...headerCellStyle }}>{FUEL_HEAD['diesel']}</div>
+          </div>
+
+          {BRANDS.map((brand) => {
+            const row = table[brand] ?? {};
+            return (
+              <div
+                key={brand}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  paddingTop: 30,
+                  paddingBottom: 30,
+                  borderBottom: '1px solid #1e293b',
+                }}
+              >
+                <div style={{ display: 'flex', flex: '0 0 360px', fontSize: 38, fontWeight: 700, color: '#ffffff' }}>{brand}</div>
+                {FUELS.map((fuel) => {
+                  const v = row[fuel];
+                  return (
+                    <div
+                      key={fuel}
+                      style={{ display: 'flex', flex: 1, justifyContent: 'flex-end', fontSize: 46, fontWeight: 800, color: valueColor(v) }}
+                    >
+                      {v != null ? String(v) : '—'}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
         </div>
 
-        {/* Brand rows */}
-        {BRANDS.map((brand) => {
-          const row = table[brand] ?? {};
-          return (
-            <div
-              key={brand}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                paddingTop: 30,
-                paddingBottom: 30,
-                borderBottom: '1px solid #1e293b',
-              }}
-            >
-              <div style={{ flex: '0 0 360px', fontSize: 38, fontWeight: 700, color: '#ffffff' }}>{brand}</div>
-              {FUELS.map((fuel) => {
-                const v = row[fuel];
-                return (
-                  <div
-                    key={fuel}
-                    style={{ flex: 1, fontSize: 46, fontWeight: 800, color: valueColor(v), textAlign: 'right' }}
-                  >
-                    {v ?? '—'}
-                  </div>
-                );
-              })}
-            </div>
-          );
-        })}
+        <div style={{ display: 'flex', flex: 1 }} />
 
-        {/* Spacer */}
-        <div style={{ flex: 1 }} />
-
-        {/* Footer */}
-        <div style={{ borderTop: '1px solid #334155', paddingTop: 24, display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={{ fontSize: 38, fontWeight: 700, color: '#10b981' }}>🌐 fuelmap.app</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', borderTop: '1px solid #334155', padding: '24px 80px 60px 80px' }}>
+          <div style={{ display: 'flex', fontSize: 38, fontWeight: 700, color: '#10b981' }}>🌐 fuelmap.app</div>
+          <div style={{ display: 'flex', alignItems: 'center', marginTop: 16 }}>
             {TgIcon}
-            <div style={{ display: 'flex', fontSize: 32, color: '#cbd5e1' }}>
-              <span>Telegram:&nbsp;</span>
-              <span style={{ fontWeight: 700, color: '#ffffff' }}>@fuelmaparmeniachat</span>
+            <div style={{ display: 'flex', marginLeft: 16, fontSize: 32, color: '#cbd5e1' }}>
+              <div style={{ display: 'flex' }}>Telegram:</div>
+              <div style={{ display: 'flex', marginLeft: 12, fontWeight: 700, color: '#ffffff' }}>@fuelmaparmeniachat</div>
             </div>
           </div>
         </div>
