@@ -221,15 +221,37 @@ async function publishToInstagram(imageUrl: string, caption: string) {
   if (!containerRes.ok || !containerData.id) {
     throw new Error(`media create: ${JSON.stringify(containerData)}`);
   }
+  const creationId = containerData.id as string;
 
-  // Step 2: publish
+  // Step 2: poll until container's status_code === FINISHED. Image
+  // download + virus-scan on Meta's side typically takes 2-8s; calling
+  // /media_publish before this finishes returns "Media ID is not
+  // available" (subcode 2207027) and the job is dropped.
+  for (let attempt = 0; attempt < 30; attempt++) {
+    await new Promise((r) => setTimeout(r, 1500));
+    const statusRes = await fetch(
+      `https://graph.facebook.com/v23.0/${creationId}?fields=status_code&access_token=${token}`
+    );
+    const statusData = await statusRes.json();
+    const code = statusData.status_code as string | undefined;
+    if (code === 'FINISHED') break;
+    if (code === 'ERROR' || code === 'EXPIRED') {
+      throw new Error(`media container ${code}: ${JSON.stringify(statusData)}`);
+    }
+    // IN_PROGRESS or PUBLISHED — keep polling.
+    if (attempt === 29) {
+      throw new Error(`media container did not become FINISHED in 45s; last status=${code}`);
+    }
+  }
+
+  // Step 3: publish
   const publishRes = await fetch(
     `https://graph.facebook.com/v23.0/${igId}/media_publish`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
-        creation_id: containerData.id,
+        creation_id: creationId,
         access_token: token,
       }),
     }
