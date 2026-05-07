@@ -16,6 +16,7 @@ const nextConfig = {
   // tofu boxes. Including the dir explicitly is the documented fix.
   outputFileTracingIncludes: {
     '/api/cron/instagram-daily': ['./fonts/**/*'],
+    '/api/cron/instagram-story-cheapest': ['./fonts/**/*'],
   },
 }
 
