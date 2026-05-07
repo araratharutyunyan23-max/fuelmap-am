@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Loader2, Save, Trash2 } from 'lucide-react';
+import { Loader2, Save, Search, Trash2, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { BRANDS } from '@/lib/brands';
 import { Button } from '@/components/ui/button';
@@ -33,12 +33,23 @@ export default function AdminBrandPricesPage() {
   const [edits, setEdits] = useState<EditMap>({});
   const [saving, setSaving] = useState<Record<string, boolean>>({});
   const [error, setError] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
 
   const overrideMap = useMemo(() => {
     const m = new Map<string, Override>();
     for (const o of overrides) m.set(key(o.brand, o.fuel_type), o);
     return m;
   }, [overrides]);
+
+  const visibleBrands = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return BRANDS;
+    return BRANDS.filter(
+      (b) =>
+        b.displayName.toLowerCase().includes(q) ||
+        b.slug.toLowerCase().includes(q)
+    );
+  }, [query]);
 
   const loadOverrides = async () => {
     setLoading(true);
@@ -118,6 +129,27 @@ export default function AdminBrandPricesPage() {
     <div>
       <h1 className="text-2xl font-semibold text-slate-900 mb-6">Цены брендов</h1>
 
+      <div className="relative mb-4 max-w-sm">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Поиск по бренду…"
+          className="w-full h-10 pl-9 pr-9 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        />
+        {query && (
+          <button
+            type="button"
+            onClick={() => setQuery('')}
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-slate-400 hover:text-slate-700"
+            title="Сбросить"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+
       {error && (
         <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
           {error}
@@ -140,7 +172,14 @@ export default function AdminBrandPricesPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {BRANDS.map((b) => (
+              {visibleBrands.length === 0 && (
+                <tr>
+                  <td colSpan={FUELS.length + 1} className="px-4 py-8 text-center text-sm text-slate-400">
+                    Ничего не найдено
+                  </td>
+                </tr>
+              )}
+              {visibleBrands.map((b) => (
                 <tr key={b.slug} className="hover:bg-slate-50">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
