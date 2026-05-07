@@ -1,15 +1,19 @@
 // POST /api/track-install
 // Called from the client when the PWA is opened in standalone mode for
-// the first time, OR when Chrome fires `appinstalled`. Posts a single
-// summary to the FuelMap Telegram channel so we see real install
-// events as they happen — Sentry / PostHog cover analytics, this is
-// a celebration ping.
+// the first time, OR when Chrome fires `appinstalled`. Two side
+// effects:
+//   1. Telegram ping to the admin channel — celebration / monitoring
+//   2. user_balance.installed_at = now() (if signed in and not yet
+//      installed). Flipping that column trips the
+//      credit_install_and_referral DB trigger which credits the
+//      welcome bonus + referrer bonus.
 //
 // No user JWT required: an anonymous device can install the PWA
 // without an account. We rate-limit per IP to prevent a single bot
 // from spamming the channel.
 
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX = 3;
@@ -48,7 +52,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
   }
 
-  let body: { locale?: string; trigger?: string; user_email?: string } = {};
+  let body: { locale?: string; trigger?: string; user_id?: string; user_email?: string } = {};
   try {
     body = await req.json();
   } catch {
@@ -59,6 +63,28 @@ export async function POST(req: NextRequest) {
   const locale = body.locale === 'hy' ? 'hy' : 'ru';
   const trigger = body.trigger === 'appinstalled' ? 'appinstalled' : 'standalone-open';
   const who = body.user_email || 'Гость';
+
+  // If the install is happening on a signed-in account, mark
+  // user_balance.installed_at — this trips the DB trigger that
+  // pays out welcome + referral bonuses on first install ever.
+  if (body.user_id) {
+    try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      if (supabaseUrl && serviceKey) {
+        const supabase = createClient(supabaseUrl, serviceKey, {
+          auth: { autoRefreshToken: false, persistSession: false },
+        });
+        await supabase
+          .from('user_balance')
+          .update({ installed_at: new Date().toISOString() })
+          .eq('user_id', body.user_id)
+          .is('installed_at', null);
+      }
+    } catch (err) {
+      console.warn('[track-install] failed to mark installed_at:', err);
+    }
+  }
 
   const botToken = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;

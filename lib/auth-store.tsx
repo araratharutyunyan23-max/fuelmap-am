@@ -44,7 +44,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password,
       options: { data: { name } },
     });
-    return { error: error?.message ?? null };
+    if (error) return { error: error.message };
+
+    // If we captured a referral code from /?r=CODE earlier, attach it
+    // now. Best-effort — apply_referral_code returns false on bad code
+    // / self-referral / already-set, all of which we can ignore safely.
+    if (typeof window !== 'undefined') {
+      const code = window.localStorage.getItem('fuelmap.referral_code');
+      if (code) {
+        try {
+          await supabase.rpc('apply_referral_code', { code });
+          window.localStorage.removeItem('fuelmap.referral_code');
+        } catch {
+          /* ignore — referrer attribution is non-critical */
+        }
+      }
+    }
+    return { error: null };
   };
 
   const signIn = async (email: string, password: string) => {

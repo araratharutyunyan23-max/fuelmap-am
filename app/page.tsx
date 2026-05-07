@@ -65,6 +65,18 @@ function AppShell() {
     window.location.replace(`/admin/prices?highlight=${encodeURIComponent(id)}`);
   }, []);
 
+  // Capture ?r=CODE referral parameter — stash in localStorage so the
+  // signUp() flow in auth-store can attach it via apply_referral_code()
+  // after Supabase creates the auth.users row.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('r');
+    if (code && /^[A-Z0-9]{4,12}$/i.test(code)) {
+      window.localStorage.setItem('fuelmap.referral_code', code.toUpperCase());
+    }
+  }, []);
+
   // Once auth state resolves, route returning users straight to the map.
   useEffect(() => {
     if (authLoading) return;
