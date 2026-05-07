@@ -13,6 +13,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import sharp from 'sharp';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+// Embed Noto Sans Armenian directly in the SVG via @font-face base64.
+// Vercel's serverless Linux image has DejaVu / Liberation but NO
+// Armenian glyph coverage — without bundling the font, all our
+// "ԱՅՍՕՐ" / "Բարի լույս" text rendered as boxes (□□□□) on the
+// generated image. The bundled .ttf files come from Google Fonts
+// Noto family, ~48 KB each — small enough to inline at every request
+// without measurable latency.
+const FONT_DIR = join(process.cwd(), 'fonts');
+const FONT_REGULAR_B64 = readFileSync(join(FONT_DIR, 'NotoSansArmenian-Regular.ttf')).toString('base64');
+const FONT_BOLD_B64    = readFileSync(join(FONT_DIR, 'NotoSansArmenian-Bold.ttf')).toString('base64');
+const FONT_FACE_CSS = `
+@font-face { font-family: 'NSArm'; font-weight: 400; src: url(data:font/ttf;base64,${FONT_REGULAR_B64}) format('truetype'); }
+@font-face { font-family: 'NSArm'; font-weight: 700; src: url(data:font/ttf;base64,${FONT_BOLD_B64})    format('truetype'); }
+`;
 
 export const maxDuration = 120;
 export const dynamic = 'force-dynamic';
@@ -78,11 +95,10 @@ async function fetchCheapest(supabase: any): Promise<CheapestRow[]> {
 }
 
 function renderSvg(rows: CheapestRow[], dateUpper: string): string {
-  // 1080×1080, dark navy gradient bg, emerald accents. Armenian
-  // subtitle uses fontconfig fallback (DejaVu Sans / Sylfaen / Noto
-  // Sans Armenian) — all of these have Armenian glyph coverage on
-  // Linux. Footer links to website + Telegram.
-  const FONT = '"Noto Sans Armenian","DejaVu Sans","Sylfaen",Arial,sans-serif';
+  // 1080×1080, dark navy gradient bg, emerald accents. Uses bundled
+  // Noto Sans Armenian (embedded as @font-face above) so Armenian
+  // glyphs render correctly on Vercel's serverless Linux.
+  const FONT = "'NSArm', Arial, sans-serif";
 
   const lines = rows
     .map((r, i) => {
@@ -106,6 +122,7 @@ function renderSvg(rows: CheapestRow[], dateUpper: string): string {
   return `
 <svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">
   <defs>
+    <style>${FONT_FACE_CSS}</style>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#0f172a"/>
       <stop offset="100%" stop-color="#1e293b"/>
