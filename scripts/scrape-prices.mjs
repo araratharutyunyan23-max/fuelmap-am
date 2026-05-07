@@ -388,18 +388,19 @@ export async function runScraper() {
   if (e0) throw e0;
   const brandByStation = new Map(allStations.map((s) => [s.id, s.brand]));
 
-  const flashIds  = allStations.filter((s) => s.brand === 'Flash').map((s) => s.id);
+  // Flash Petrol is the brand that owns flashpetrol.am — these stations
+  // get the scraped prices. Stations still tagged as plain "Flash" are
+  // a different (red) brand whose prices come from admin overrides only.
+  const flashIds  = allStations.filter((s) => s.brand === 'Flash Petrol').map((s) => s.id);
   const maxOilIds = allStations.filter((s) => s.brand === 'Max Oil').map((s) => s.id);
-  // Group remaining stations by brand so we can apply per-brand derived
-  // prices (see BRAND_PRICE_RULES above).
   const otherIdsByBrand = new Map();
   for (const s of allStations) {
-    if (s.brand === 'Flash' || s.brand === 'Max Oil') continue;
+    if (s.brand === 'Flash Petrol' || s.brand === 'Max Oil') continue;
     if (!otherIdsByBrand.has(s.brand)) otherIdsByBrand.set(s.brand, []);
     otherIdsByBrand.get(s.brand).push(s.id);
   }
   const otherTotal = [...otherIdsByBrand.values()].reduce((a, ids) => a + ids.length, 0);
-  console.log(`  Flash: ${flashIds.length} · Max Oil: ${maxOilIds.length} · others: ${otherTotal} (${otherIdsByBrand.size} brands)`);
+  console.log(`  Flash Petrol: ${flashIds.length} · Max Oil: ${maxOilIds.length} · others: ${otherTotal} (${otherIdsByBrand.size} brands)`);
 
   console.log('  Reading admin overrides …');
   const overrideMap = await fetchOverrides();

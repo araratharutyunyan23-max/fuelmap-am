@@ -26,6 +26,7 @@ export interface Brand {
 
 export const BRANDS: Brand[] = [
   { slug: 'CPS',        displayName: 'CPS',        color: '#06b6d4', tier: 1, initial: 'CP' },
+  { slug: 'Flash Petrol', displayName: 'Flash Petrol', color: '#893c86', tier: 1, initial: 'FP' },
   { slug: 'Flash',      displayName: 'Flash',      color: '#dc2626', tier: 1, initial: 'FL' },
   { slug: 'Max Oil',    displayName: 'Max Oil',    color: '#0d9488', tier: 1, initial: 'MX' },
   { slug: 'RAN Oil',    displayName: 'RAN Oil',    color: '#d97706', tier: 1, initial: 'RN' },
