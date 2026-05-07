@@ -121,10 +121,10 @@ function renderImage(table: BrandTable, dateUpper: string): Promise<ArrayBuffer>
           <div style={{ fontSize: 80, fontWeight: 900, color: '#10b981', marginLeft: 20 }}>Armenia</div>
         </div>
         <div style={{ marginTop: 8, fontSize: 32, fontWeight: 600, color: '#94a3b8' }}>
-          {dateUpper} · ՎԱՌԵԼԻՔԻ ԳՆԵՐԸ ՀԱՅԱՍՏԱՆՈՒՄ
+          {`${dateUpper} · ՎԱՌԵԼԻՔԻ ԳՆԵՐԸ ՀԱՅԱՍՏԱՆՈՒՄ`}
         </div>
         <div style={{ marginTop: 4, fontSize: 26, fontWeight: 500, color: '#64748b' }}>
-          գները՝ դրամ/լիտր
+          {'գները՝ դրամ/լիտր'}
         </div>
 
         {/* Table header */}
@@ -174,8 +174,9 @@ function renderImage(table: BrandTable, dateUpper: string): Promise<ArrayBuffer>
           <div style={{ fontSize: 38, fontWeight: 700, color: '#10b981' }}>🌐 fuelmap.app</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             {TgIcon}
-            <div style={{ fontSize: 32, color: '#cbd5e1' }}>
-              Telegram: <span style={{ fontWeight: 700, color: '#ffffff' }}>@fuelmaparmeniachat</span>
+            <div style={{ display: 'flex', fontSize: 32, color: '#cbd5e1' }}>
+              <span>Telegram:&nbsp;</span>
+              <span style={{ fontWeight: 700, color: '#ffffff' }}>@fuelmaparmeniachat</span>
             </div>
           </div>
         </div>
