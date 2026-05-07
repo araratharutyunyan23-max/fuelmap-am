@@ -16,6 +16,9 @@ import {
   Star,
   Smartphone,
   Globe,
+  Gift,
+  Copy as CopyIcon,
+  Send,
 } from 'lucide-react';
 import { installArticleUrl, isAppInstalled } from '@/lib/install-link';
 import { LanguageSwitcher } from '@/components/language-switcher';
@@ -165,6 +168,9 @@ export function ProfileScreen({ onNavigate, onStationSelect }: ProfileScreenProp
 
       {/* Balance — show only for signed-in users */}
       {user && <BalanceCard balance={balance.amount} />}
+
+      {/* Refer-a-friend block — only when signed in (we need a code) */}
+      {user && <ReferralCard />}
 
       {/* Install-as-PWA CTA — auto-hidden once running standalone. Visible
           to guests too: a non-logged-in user is the most likely to need it. */}
@@ -551,6 +557,146 @@ function PushToggle() {
           />
         </div>
       </button>
+    </div>
+  );
+}
+
+// Refer-a-friend block: shows the user's own referral code, lets them
+// share via Telegram / WhatsApp / native share, and reports stats
+// (count of rewarded referrals, total ֏ earned). Code + stats live in
+// public.user_balance and public.referral_events; we read both here
+// via a simple supabase select.
+function ReferralCard() {
+  const t = useT();
+  const { user } = useAuth();
+  const [code, setCode] = useState<string | null>(null);
+  const [stats, setStats] = useState<{ invited: number; earned: number }>({ invited: 0, earned: 0 });
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      const [{ data: bal }, { data: events }] = await Promise.all([
+        supabase
+          .from('user_balance')
+          .select('referral_code')
+          .eq('user_id', user.id)
+          .maybeSingle(),
+        supabase
+          .from('referral_events')
+          .select('reward_amd, status')
+          .eq('referrer_id', user.id)
+          .eq('status', 'rewarded'),
+      ]);
+      if (cancelled) return;
+      if (bal?.referral_code) setCode(bal.referral_code);
+      if (events) {
+        setStats({
+          invited: events.length,
+          earned: events.reduce((s, e) => s + (e.reward_amd ?? 0), 0),
+        });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  if (!code) return null;
+
+  const url = `https://fuelmap.app/?r=${code}`;
+  const shareText = `${t('profile.referral.share_text')}\n\n${url}`;
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* ignore — user can long-press to copy manually */
+    }
+  };
+  const tgShareUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(t('profile.referral.share_text'))}`;
+  const waShareUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+  const handleNativeShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'FuelMap Armenia', text: t('profile.referral.share_text'), url });
+      } catch {
+        /* user cancelled */
+      }
+    }
+  };
+
+  return (
+    <div className="px-4 pt-4">
+      <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center flex-shrink-0">
+            <Gift className="w-5 h-5 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-slate-900">{t('profile.referral.title')}</p>
+            <p className="text-xs text-slate-600 mt-0.5">{t('profile.referral.subtitle')}</p>
+          </div>
+        </div>
+
+        <p className="text-[11px] text-slate-500 uppercase tracking-wide mb-1">
+          {t('profile.referral.your_link')}
+        </p>
+        <div className="flex items-center gap-2 mb-3">
+          <code className="flex-1 px-3 py-2 bg-white rounded-lg text-sm font-mono text-slate-800 truncate border border-amber-200">
+            {url}
+          </code>
+          <button
+            onClick={handleCopy}
+            className="px-3 py-2 bg-white border border-amber-200 rounded-lg text-xs font-medium text-slate-700 hover:bg-amber-100 transition-colors flex items-center gap-1"
+          >
+            <CopyIcon className="w-3.5 h-3.5" />
+            {copied ? t('profile.referral.copied') : t('profile.referral.copy')}
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2 mb-3">
+          <a
+            href={tgShareUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 px-3 py-2 bg-[#229ED9] text-white rounded-lg text-sm font-medium flex items-center justify-center gap-1.5 hover:bg-[#1a8bc4] transition-colors"
+          >
+            <Send className="w-4 h-4" />
+            Telegram
+          </a>
+          <a
+            href={waShareUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 px-3 py-2 bg-[#25D366] text-white rounded-lg text-sm font-medium flex items-center justify-center gap-1.5 hover:bg-[#1ebe5a] transition-colors"
+          >
+            WhatsApp
+          </a>
+          {typeof navigator !== 'undefined' && 'share' in navigator && (
+            <button
+              onClick={handleNativeShare}
+              className="px-3 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-300 transition-colors"
+            >
+              {t('profile.referral.share')}
+            </button>
+          )}
+        </div>
+
+        <div className="flex items-center justify-between text-xs text-slate-700 pt-3 border-t border-amber-200">
+          <span>
+            {t('profile.referral.invited')}:{' '}
+            <span className="font-bold text-slate-900">{stats.invited}</span>
+          </span>
+          <span>
+            {t('profile.referral.earned')}:{' '}
+            <span className="font-bold text-emerald-700">{stats.earned} ֏</span>
+          </span>
+        </div>
+      </div>
     </div>
   );
 }

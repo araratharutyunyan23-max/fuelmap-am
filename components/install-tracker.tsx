@@ -39,6 +39,7 @@ export function InstallTracker() {
         body: JSON.stringify({
           trigger,
           locale,
+          user_id: user?.id ?? null,
           user_email: user?.email ?? null,
         }),
       }).catch(() => {
