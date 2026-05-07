@@ -98,7 +98,10 @@ function renderSvg(rows: CheapestRow[], dateUpper: string): string {
   // 1080×1080, dark navy gradient bg, emerald accents. Uses bundled
   // Noto Sans Armenian (embedded as @font-face above) so Armenian
   // glyphs render correctly on Vercel's serverless Linux.
-  const FONT = "'NSArm', Arial, sans-serif";
+  // No quotes around the family name — the SVG attribute is already
+  // wrapped in single quotes downstream, and a name without spaces
+  // doesn't need its own quoting.
+  const FONT = 'NSArm, Arial, sans-serif';
 
   const lines = rows
     .map((r, i) => {
