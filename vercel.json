@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/instagram-daily",
       "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/cron/instagram-story-cheapest",
+      "schedule": "5 7 * * *"
     }
   ]
 }
