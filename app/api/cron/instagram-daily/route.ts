@@ -34,16 +34,22 @@ const FONT_FACE_CSS = `
 export const maxDuration = 120;
 export const dynamic = 'force-dynamic';
 
-const FUELS = ['92', '95', 'lpg'] as const;
-const FUEL_LABEL: Record<string, string> = {
+// Brand-comparison post: 4 brands × 4 fuels (Regular / Premium / LPG /
+// Diesel). Bigger picture vs a "cheapest 3" list — readers can spot
+// their preferred brand and decide where to fill up.
+const BRANDS = ['Flash Petrol', 'Max Oil', 'CPS', 'Flash'] as const;
+const FUELS = ['92', '95', 'lpg', 'diesel'] as const;
+const FUEL_HEAD: Record<string, string> = {
   '92': 'Regular',
   '95': 'Premium',
   lpg: 'LPG',
+  diesel: 'Diesel',
 };
-const FUEL_ARM: Record<string, string> = {
-  '92': 'Ռեգուլյար (92)',
-  '95': 'Պրեմիում (95)',
-  lpg: 'Գազ (LPG)',
+const FUEL_ARM_SHORT: Record<string, string> = {
+  '92': 'Regular',
+  '95': 'Premium',
+  lpg: 'գազ',
+  diesel: 'դիզել',
 };
 
 // Armenian month names — nominative for image (less inflected, reads
@@ -62,60 +68,65 @@ function yerevanDate(): { day: number; month: number; year: number } {
   return { day: d, month: m - 1, year: y };
 }
 
-interface CheapestRow {
-  fuel: string;
-  price: number;
-  stationName: string;
-  brand: string;
-}
+type BrandTable = Record<string, Record<string, number | undefined>>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function fetchCheapest(supabase: any): Promise<CheapestRow[]> {
-  const out: CheapestRow[] = [];
-  for (const fuel of FUELS) {
-    const { data, error } = await supabase
-      .from('station_prices')
-      .select('price, stations:station_id(name, brand)')
-      .eq('fuel_type', fuel)
-      .gt('price', 0)
-      .order('price', { ascending: true })
-      .limit(1)
-      .maybeSingle();
-    if (error) throw new Error(`fetchCheapest ${fuel}: ${error.message}`);
-    if (!data) continue;
-    const station = data.stations;
-    out.push({
-      fuel,
-      price: data.price as number,
-      stationName: station?.name ?? '?',
-      brand: station?.brand ?? '?',
-    });
+async function fetchBrandTable(supabase: any): Promise<BrandTable> {
+  const out: BrandTable = {};
+  for (const brand of BRANDS) {
+    out[brand] = {};
+    for (const fuel of FUELS) {
+      // Fetch cheapest price for this brand+fuel. brand_price_overrides
+      // make all stations of a brand quote the same number, but we
+      // still query in case some stations diverge.
+      const { data, error } = await supabase
+        .from('station_prices')
+        .select('price, stations:station_id!inner(brand)')
+        .eq('fuel_type', fuel)
+        .gt('price', 0)
+        .order('price', { ascending: true });
+      if (error) throw new Error(`fetchBrandTable ${brand}/${fuel}: ${error.message}`);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const matching = (data ?? []).filter((r: any) => r.stations?.brand === brand);
+      if (matching.length > 0) out[brand][fuel] = matching[0].price as number;
+    }
   }
   return out;
 }
 
-function renderSvg(rows: CheapestRow[], dateUpper: string): string {
-  // 1080×1080, dark navy gradient bg, emerald accents. Uses bundled
-  // Noto Sans Armenian (embedded as @font-face above) so Armenian
-  // glyphs render correctly on Vercel's serverless Linux.
-  // No quotes around the family name — the SVG attribute is already
-  // wrapped in single quotes downstream, and a name without spaces
-  // doesn't need its own quoting.
+function renderSvg(table: BrandTable, dateUpper: string): string {
+  // 1080×1080, dark navy gradient + emerald accents. Layout: 4-brand
+  // table with Regular/Premium/LPG/Diesel columns. Bundled Noto Sans
+  // Armenian renders the headline + sub-line correctly on Vercel's
+  // serverless Linux (no Armenian glyphs in the default font set).
   const FONT = 'NSArm, Arial, sans-serif';
+  const COLS_X = [120, 530, 720, 880, 1020]; // brand, regular, premium, lpg, diesel
+  const ROW_H = 110;
+  const TABLE_TOP = 410;
 
-  const lines = rows
-    .map((r, i) => {
-      const y = 490 + i * 130;
-      return `
-        <text x="80"  y="${y}" font-family='${FONT}' font-size="48" font-weight="700" fill="#94a3b8">${FUEL_LABEL[r.fuel]}</text>
-        <text x="640" y="${y}" font-family='${FONT}' font-size="76" font-weight="900" fill="#10b981" text-anchor="end">${r.price} ֏</text>
-        <text x="700" y="${y}" font-family='${FONT}' font-size="42" font-weight="600" fill="#cbd5e1">${r.brand}</text>
-      `;
-    })
-    .join('');
+  let svgRows = `
+    <text x="${COLS_X[0]}" y="${TABLE_TOP}" font-family='${FONT}' font-size="28" font-weight="700" fill="#94a3b8">ԲՐԵՆԴ</text>
+    <text x="${COLS_X[1]}" y="${TABLE_TOP}" font-family='${FONT}' font-size="28" font-weight="700" fill="#94a3b8" text-anchor="end">${FUEL_HEAD['92']}</text>
+    <text x="${COLS_X[2]}" y="${TABLE_TOP}" font-family='${FONT}' font-size="28" font-weight="700" fill="#94a3b8" text-anchor="end">${FUEL_HEAD['95']}</text>
+    <text x="${COLS_X[3]}" y="${TABLE_TOP}" font-family='${FONT}' font-size="28" font-weight="700" fill="#94a3b8" text-anchor="end">${FUEL_HEAD['lpg']}</text>
+    <text x="${COLS_X[4]}" y="${TABLE_TOP}" font-family='${FONT}' font-size="28" font-weight="700" fill="#94a3b8" text-anchor="end">${FUEL_HEAD['diesel']}</text>
+  `;
 
-  // Telegram brand icon (paper plane) inlined as SVG path so we don't
-  // depend on emoji rendering — looks consistent across renderers.
+  for (let i = 0; i < BRANDS.length; i++) {
+    const brand = BRANDS[i];
+    const y = TABLE_TOP + 70 + i * ROW_H;
+    svgRows += `
+      <line x1="80" y1="${y - 50}" x2="1000" y2="${y - 50}" stroke="#1e293b" stroke-width="1"/>
+      <text x="${COLS_X[0]}" y="${y}" font-family='${FONT}' font-size="38" font-weight="700" fill="#ffffff">${brand}</text>
+    `;
+    for (let j = 0; j < FUELS.length; j++) {
+      const v = table[brand]?.[FUELS[j]];
+      const fill = v ? '#10b981' : '#475569';
+      const txt = v ?? '—';
+      svgRows += `<text x="${COLS_X[j + 1]}" y="${y}" font-family='${FONT}' font-size="46" font-weight="800" fill="${fill}" text-anchor="end">${txt}</text>`;
+    }
+  }
+
   const tgIcon = `
     <g transform="translate(80,990)">
       <circle cx="22" cy="22" r="22" fill="#229ED9"/>
@@ -138,26 +149,33 @@ function renderSvg(rows: CheapestRow[], dateUpper: string): string {
   <rect width="1080" height="1080" fill="url(#bg)"/>
   <rect x="0" y="0" width="1080" height="8" fill="url(#accent)"/>
 
-  <text x="80" y="180" font-family='${FONT}' font-size="80" font-weight="900" fill="#ffffff">FuelMap <tspan fill="#10b981">Armenia</tspan></text>
-  <text x="80" y="240" font-family='${FONT}' font-size="34" font-weight="600" fill="#94a3b8">${dateUpper} · ԱՄԵՆԱԷԺԱՆ ԳՆԵՐԸ</text>
+  <text x="80" y="170" font-family='${FONT}' font-size="80" font-weight="900" fill="#ffffff">FuelMap <tspan fill="#10b981">Armenia</tspan></text>
+  <text x="80" y="225" font-family='${FONT}' font-size="32" font-weight="600" fill="#94a3b8">${dateUpper} · ՎԱՌԵԼԻՔԻ ԳՆԵՐԸ ՀԱՅԱՍՏԱՆՈՒՄ</text>
+  <text x="80" y="270" font-family='${FONT}' font-size="26" font-weight="500" fill="#64748b">գները՝ դրամ/լիտր</text>
 
-  <line x1="80" y1="370" x2="1000" y2="370" stroke="#334155" stroke-width="2"/>
-  ${lines}
+  ${svgRows}
+
   <line x1="80" y1="900" x2="1000" y2="900" stroke="#334155" stroke-width="2"/>
-
-  <text x="80" y="970"  font-family='${FONT}' font-size="38" font-weight="700" fill="#10b981">🌐 fuelmap.app</text>
+  <text x="80" y="970" font-family='${FONT}' font-size="38" font-weight="700" fill="#10b981">🌐 fuelmap.app</text>
   ${tgIcon}
   <text x="145" y="1023" font-family='${FONT}' font-size="32" font-weight="500" fill="#cbd5e1">Telegram: <tspan fill="#ffffff" font-weight="700">@fuelmaparmeniachat</tspan></text>
 </svg>
 `;
 }
 
-function buildCaption(rows: CheapestRow[], dateGenitive: string): string {
-  const lines = rows.map(
-    (r) => `⛽ ${FUEL_ARM[r.fuel]} — ${r.price} ֏ · ${r.brand}`
-  );
+function buildCaption(table: BrandTable, dateGenitive: string): string {
+  const lines = BRANDS.map((brand) => {
+    const parts = FUELS.map((fuel) => {
+      const v = table[brand]?.[fuel];
+      if (!v) return null;
+      return `${FUEL_ARM_SHORT[fuel]} ${v}`;
+    }).filter(Boolean);
+    if (parts.length === 0) return null;
+    return `⛽ ${brand} — ${parts.join(' · ')} ֏`;
+  }).filter(Boolean) as string[];
+
   return [
-    `☀️ Բարի լույս! ${dateGenitive} — Հայաստանի ամենաէժան գները:`,
+    `📊 Այսօրվա վառելիքի գները Հայաստանում — ${dateGenitive}`,
     '',
     ...lines,
     '',
@@ -238,8 +256,12 @@ export async function GET(req: NextRequest) {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    const rows = await fetchCheapest(supabase);
-    if (rows.length === 0) {
+    const table = await fetchBrandTable(supabase);
+    const rowCount = BRANDS.reduce(
+      (n, b) => n + Object.keys(table[b] ?? {}).length,
+      0
+    );
+    if (rowCount === 0) {
       return NextResponse.json({ ok: false, reason: 'no prices in db' }, { status: 200 });
     }
 
@@ -247,16 +269,16 @@ export async function GET(req: NextRequest) {
     const dateUpper = `${day} ${ARM_MONTHS_NOM[month].toUpperCase()}`;
     const dateGenitive = `${day} ${ARM_MONTHS_GEN[month]}`;
 
-    const svg = renderSvg(rows, dateUpper);
+    const svg = renderSvg(table, dateUpper);
     const jpeg = await sharp(Buffer.from(svg)).jpeg({ quality: 88 }).toBuffer();
     const imageUrl = await uploadToStorage(supabase, jpeg);
-    const postId = await publishToInstagram(imageUrl, buildCaption(rows, dateGenitive));
+    const postId = await publishToInstagram(imageUrl, buildCaption(table, dateGenitive));
 
     return NextResponse.json({
       ok: true,
       postId,
       imageUrl,
-      rowsPosted: rows.length,
+      cellsPosted: rowCount,
     });
   } catch (err) {
     console.error('[cron/instagram-daily]', err);
