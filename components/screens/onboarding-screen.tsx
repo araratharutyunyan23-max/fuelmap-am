@@ -1,11 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { MapPin, TrendingDown, Bell, Droplets, ArrowUpRight } from 'lucide-react';
+import { MapPin, TrendingDown, Bell, Droplets, ArrowUpRight, Gift } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { useLocale, useT } from '@/lib/locale-store';
 import { installArticleUrl, isAppInstalled } from '@/lib/install-link';
+import { supabase } from '@/lib/supabase';
 
 interface OnboardingScreenProps {
   onLogin: () => void;
@@ -25,6 +26,29 @@ export function OnboardingScreen({ onLogin, onRegister, onGuest }: OnboardingScr
     setInstallUrl(installArticleUrl(locale));
   }, [locale]);
 
+  // Referral banner: if the user landed via /?r=CODE the code was
+  // stashed in localStorage by app/page.tsx. Look up the referrer's
+  // display name via the anonymous-safe RPC and show a small banner
+  // so they know what they're signing up for.
+  const [referrerName, setReferrerName] = useState<string | null>(null);
+  const [hasReferralCode, setHasReferralCode] = useState(false);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const code = window.localStorage.getItem('fuelmap.referral_code');
+    if (!code) return;
+    setHasReferralCode(true);
+    let cancelled = false;
+    supabase.rpc('lookup_referrer_name', { code }).then(({ data }) => {
+      if (cancelled) return;
+      if (data && typeof data === 'string' && data.trim().length > 0) {
+        setReferrerName(data.trim());
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <div className="flex justify-end p-4">
@@ -41,6 +65,17 @@ export function OnboardingScreen({ onLogin, onRegister, onGuest }: OnboardingScr
             FuelMap <span className="text-emerald-600">Armenia</span>
           </span>
         </div>
+
+        {hasReferralCode && (
+          <div className="w-full mb-6 px-4 py-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-300 rounded-xl flex items-center gap-3">
+            <Gift className="w-5 h-5 text-amber-600 flex-shrink-0" />
+            <p className="text-sm text-amber-900 font-medium">
+              {referrerName
+                ? t('onboarding.referral.banner', { name: referrerName })
+                : t('onboarding.referral.banner_anon')}
+            </p>
+          </div>
+        )}
 
         <p className="text-center text-lg text-slate-600 mb-10 text-balance">
           {t('onboarding.tagline')}
