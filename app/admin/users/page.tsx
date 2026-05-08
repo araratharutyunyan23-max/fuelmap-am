@@ -40,6 +40,7 @@ function totalActions(r: UserRow): number {
 }
 
 type Filter = 'all' | 'active' | 'idle' | 'no-show';
+type Sort = 'engagement' | 'last-desc' | 'last-asc';
 
 export default function AdminUsersPage() {
   const [rows, setRows] = useState<UserRow[]>([]);
@@ -48,6 +49,8 @@ export default function AdminUsersPage() {
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>('all');
   const [hideSeed, setHideSeed] = useState(true);
+  const [sort, setSort] = useState<Sort>('engagement');
+  const [search, setSearch] = useState('');
 
   const load = async () => {
     setLoading(true);
@@ -64,6 +67,8 @@ export default function AdminUsersPage() {
   const filtered = useMemo(() => {
     let list = rows;
     if (hideSeed) list = list.filter((r) => !r.is_seed);
+    const q = search.trim().toLowerCase();
+    if (q) list = list.filter((r) => (r.email ?? '').toLowerCase().includes(q));
     if (filter === 'active') {
       // Returned at least once after registering OR did anything OR enabled push.
       list = list.filter((r) => {
@@ -80,8 +85,16 @@ export default function AdminUsersPage() {
     } else if (filter === 'no-show') {
       list = list.filter((r) => !r.last_sign_in_at);
     }
-    // Default sort: most-engaged first (total actions desc, then balance, then last seen).
     return [...list].sort((a, b) => {
+      if (sort === 'last-desc' || sort === 'last-asc') {
+        const la = a.last_sign_in_at ? new Date(a.last_sign_in_at).getTime() : 0;
+        const lb = b.last_sign_in_at ? new Date(b.last_sign_in_at).getTime() : 0;
+        // Push users that never signed in to the bottom in both directions.
+        if (la === 0 && lb !== 0) return 1;
+        if (lb === 0 && la !== 0) return -1;
+        return sort === 'last-desc' ? lb - la : la - lb;
+      }
+      // Default: most-engaged first (total actions desc, then balance, then last seen).
       const da = totalActions(b) - totalActions(a);
       if (da !== 0) return da;
       const db = b.balance_amd - a.balance_amd;
@@ -90,7 +103,7 @@ export default function AdminUsersPage() {
       const lb = a.last_sign_in_at ? new Date(a.last_sign_in_at).getTime() : 0;
       return la - lb;
     });
-  }, [rows, filter, hideSeed]);
+  }, [rows, filter, hideSeed, sort, search]);
 
   const stats = useMemo(() => {
     const real = rows.filter((r) => !r.is_seed);
@@ -128,8 +141,7 @@ export default function AdminUsersPage() {
     <div>
       <h1 className="text-2xl font-semibold text-slate-900 mb-2">Пользователи</h1>
       <p className="text-sm text-slate-500 mb-6">
-        Сортировка по убыванию активности (price_reports + станции + отзывы + избранное),
-        потом по балансу, потом по дате последнего входа.
+        Поиск по email и сортировка по последнему входу или активности.
       </p>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
@@ -137,6 +149,34 @@ export default function AdminUsersPage() {
         <StatCard label="Активные" value={stats.active} accent="emerald" />
         <StatCard label="Push включён" value={stats.pushEnabled} accent="emerald" />
         <StatCard label="Контрибьюторы" value={stats.contributors} accent="emerald" />
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 mb-3">
+        <input
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Поиск по email…"
+          className="px-3 py-1.5 rounded-full text-xs border border-slate-200 bg-white placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 w-56"
+        />
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value as Sort)}
+          className="px-3 py-1.5 rounded-full text-xs border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+        >
+          <option value="engagement">По активности</option>
+          <option value="last-desc">Последний вход: новые → старые</option>
+          <option value="last-asc">Последний вход: старые → новые</option>
+        </select>
+        <label className="ml-auto flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={hideSeed}
+            onChange={(e) => setHideSeed(e.target.checked)}
+            className="accent-emerald-600"
+          />
+          Скрыть seed-аккаунты
+        </label>
       </div>
 
       <div className="flex flex-wrap items-center gap-2 mb-4">
@@ -157,15 +197,6 @@ export default function AdminUsersPage() {
             {f === 'no-show' && 'Не подтвердили email'}
           </button>
         ))}
-        <label className="ml-auto flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={hideSeed}
-            onChange={(e) => setHideSeed(e.target.checked)}
-            className="accent-emerald-600"
-          />
-          Скрыть seed-аккаунты
-        </label>
       </div>
 
       {error && (
