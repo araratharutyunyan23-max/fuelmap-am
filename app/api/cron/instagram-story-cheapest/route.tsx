@@ -38,8 +38,6 @@ type CheapestRow = {
   label: string;
   price: number;
   brand: string;
-  name: string;
-  address: string;
 };
 
 async function fetchCheapestForFuel(
@@ -50,7 +48,7 @@ async function fetchCheapestForFuel(
 ): Promise<CheapestRow | null> {
   const { data, error } = await supabase
     .from('station_prices')
-    .select('price, stations:station_id!inner(name, brand, address, address_hy)')
+    .select('price, stations:station_id!inner(brand)')
     .eq('fuel_type', fuel)
     .gt('price', 0)
     .order('price', { ascending: true })
@@ -63,8 +61,6 @@ async function fetchCheapestForFuel(
     label,
     price: row.price as number,
     brand: row.stations.brand as string,
-    name: (row.stations.name as string) ?? row.stations.brand,
-    address: (row.stations.address_hy as string) || (row.stations.address as string) || '',
   };
 }
 
@@ -118,11 +114,6 @@ function renderStory(rows: CheapestRow[], dateGenitive: string): Promise<ArrayBu
                 <div style={{ display: 'flex', fontSize: 40, fontWeight: 700, color: '#cbd5e1', marginLeft: 16 }}>֏ / լ</div>
               </div>
               <div style={{ display: 'flex', fontSize: 38, fontWeight: 700, color: '#ffffff', marginTop: 16 }}>{row.brand}</div>
-              {row.address ? (
-                <div style={{ display: 'flex', fontSize: 26, color: '#94a3b8', marginTop: 6, lineHeight: 1.3 }}>{row.address}</div>
-              ) : (
-                <div style={{ display: 'flex' }} />
-              )}
             </div>
           ))}
         </div>
