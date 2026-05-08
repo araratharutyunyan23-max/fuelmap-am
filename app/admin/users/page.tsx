@@ -39,7 +39,7 @@ function totalActions(r: UserRow): number {
   return r.price_reports + r.station_submissions + r.station_reviews + r.favorites;
 }
 
-type Filter = 'all' | 'active' | 'idle' | 'no-show';
+type Filter = 'all' | 'idle';
 type Sort = 'engagement' | 'last-desc' | 'last-asc';
 
 export default function AdminUsersPage() {
@@ -69,21 +69,12 @@ export default function AdminUsersPage() {
     if (hideSeed) list = list.filter((r) => !r.is_seed);
     const q = search.trim().toLowerCase();
     if (q) list = list.filter((r) => (r.email ?? '').toLowerCase().includes(q));
-    if (filter === 'active') {
-      // Returned at least once after registering OR did anything OR enabled push.
-      list = list.filter((r) => {
-        const created = new Date(r.created_at).getTime();
-        const last = r.last_sign_in_at ? new Date(r.last_sign_in_at).getTime() : 0;
-        return last - created > 60_000 || totalActions(r) > 0 || r.push_subscribed;
-      });
-    } else if (filter === 'idle') {
+    if (filter === 'idle') {
       list = list.filter((r) => {
         const created = new Date(r.created_at).getTime();
         const last = r.last_sign_in_at ? new Date(r.last_sign_in_at).getTime() : 0;
         return last - created < 60_000 && totalActions(r) === 0 && !r.push_subscribed;
       });
-    } else if (filter === 'no-show') {
-      list = list.filter((r) => !r.last_sign_in_at);
     }
     return [...list].sort((a, b) => {
       if (sort === 'last-desc' || sort === 'last-asc') {
@@ -180,7 +171,7 @@ export default function AdminUsersPage() {
       </div>
 
       <div className="flex flex-wrap items-center gap-2 mb-4">
-        {(['all', 'active', 'idle', 'no-show'] as const).map((f) => (
+        {(['all', 'idle'] as const).map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
@@ -192,9 +183,7 @@ export default function AdminUsersPage() {
             )}
           >
             {f === 'all' && 'Все'}
-            {f === 'active' && 'Активные'}
             {f === 'idle' && 'Только зарегистрировались'}
-            {f === 'no-show' && 'Не подтвердили email'}
           </button>
         ))}
       </div>
