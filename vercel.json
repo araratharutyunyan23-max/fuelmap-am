@@ -2,15 +2,15 @@
   "crons": [
     {
       "path": "/api/cron/scrape-prices",
-      "schedule": "0 6 * * *"
+      "schedule": "53 8 * * *"
     },
     {
       "path": "/api/cron/instagram-daily",
-      "schedule": "0 7 * * *"
+      "schedule": "55 8 * * *"
     },
     {
-      "path": "/api/cron/sanity",
-      "schedule": "35 8 * * *"
+      "path": "/api/cron/instagram-story-cheapest",
+      "schedule": "57 8 * * *"
     }
   ]
 }
