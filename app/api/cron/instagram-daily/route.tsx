@@ -7,6 +7,11 @@
 // reached the renderer and Armenian glyphs came out as tofu boxes.
 // next/og loads custom fonts via its `fonts` option and reliably
 // renders Armenian + Latin together.
+//
+// After the feed post succeeds, this route also triggers the Story
+// route internally. We fold both into a single Vercel-cron entry
+// because Hobby plan caps cron jobs at 2 per project — exceeding that
+// silently disables the scheduler for ALL crons, not just the extra.
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
@@ -14,7 +19,9 @@ import { ImageResponse } from 'next/og';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-export const maxDuration = 120;
+// Bumped from 120s — this route now also chains into the Story route,
+// so worst-case is two IG container polls back-to-back (~30-50s each).
+export const maxDuration = 300;
 export const dynamic = 'force-dynamic';
 
 // Read the bundled Armenian fonts once per cold start. The /fonts
@@ -298,7 +305,26 @@ export async function GET(req: NextRequest) {
     const imageUrl = await uploadToStorage(supabase, png);
     const postId = await publishToInstagram(imageUrl, buildCaption(table, dateGenitive));
 
-    return NextResponse.json({ ok: true, postId, imageUrl, cellsPosted });
+    // Chain the daily Story. Failures here must not fail the feed
+    // post — log, return both outcomes in the response. We hit the
+    // route via VERCEL_URL (deployment alias) so the Story endpoint
+    // runs in its own serverless invocation and doesn't share our
+    // 300s budget end-to-end.
+    let storyResult: { ok: boolean; storyId?: string; error?: string } = { ok: false };
+    try {
+      const base = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://fuelmap.app';
+      const r = await fetch(`${base}/api/cron/instagram-story-cheapest`, {
+        headers: { Authorization: `Bearer ${process.env.CRON_SECRET}` },
+      });
+      storyResult = await r.json();
+      if (!r.ok) console.error('[cron/instagram-daily] story chain non-200:', r.status, storyResult);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error('[cron/instagram-daily] story chain failed:', msg);
+      storyResult = { ok: false, error: msg };
+    }
+
+    return NextResponse.json({ ok: true, postId, imageUrl, cellsPosted, story: storyResult });
   } catch (err) {
     console.error('[cron/instagram-daily]', err);
     const message = err instanceof Error ? err.message : String(err);
