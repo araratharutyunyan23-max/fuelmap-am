@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/scrape-prices",
-      "schedule": "25 8 * * *"
+      "schedule": "18 8 * * *"
     },
     {
       "path": "/api/cron/instagram-daily",
