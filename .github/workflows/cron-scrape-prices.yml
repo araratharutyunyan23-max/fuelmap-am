@@ -1,0 +1,32 @@
+name: cron-scrape-prices
+
+# Scrapes Flash Petrol / Max Oil / globalpetrolprices.com and upserts
+# the daily station_prices, then posts the diff summary to Telegram.
+# Replaces the Vercel cron that lived at the same UTC time.
+#
+# Schedule: 06:00 UTC = 10:00 Yerevan. GitHub Actions cron drifts up
+# to 5-15 min during peak UTC; that's acceptable here because the IG
+# feed post (07:00 UTC) reads from the prices we just wrote.
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  fire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Hit /api/cron/scrape-prices
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -eu
+          resp=$(curl -fsS --max-time 300 -w '\n%{http_code}' \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            https://fuelmap.app/api/cron/scrape-prices)
+          status=$(echo "$resp" | tail -n1)
+          body=$(echo "$resp" | head -n -1)
+          echo "HTTP $status"
+          echo "Body: $body"
+          [ "$status" = "200" ] || { echo "non-200 from handler"; exit 1; }
